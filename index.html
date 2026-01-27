@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foro LaLiga</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Using FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <span class="logo-text">Foro LaLiga</span>
+            </div>
+
+            <nav class="main-nav">
+                <button class="nav-btn active" data-target="forum-view">Foro</button>
+                <button class="nav-btn" data-target="chat-view">Chat</button>
+            </nav>
+
+            <button class="btn btn-primary login-btn">Login</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- FORUM VIEW -->
+        <div id="forum-view" class="view-layout">
+            <section class="feed">
+                <div class="feed-header">
+                    <h2>Temas Recientes</h2>
+                    <button class="icon-btn"><i class="fa-solid fa-bars-staggered"></i></button>
+                </div>
+
+                <!-- Topics will be loaded here dynamically -->
+                <div id="topics-container">
+                    <div class="loading-topics">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Cargando temas...
+                    </div>
+                </div>
+
+            </section>
+
+            <aside class="sidebar">
+                <button class="btn btn-primary btn-full btn-lg" id="new-topic-btn">
+                    <i class="fa-solid fa-plus"></i> Nuevo Tema
+                </button>
+
+                <div class="widget filter-widget">
+                    <div class="widget-header">
+                        <i class="fa-solid fa-filter"></i>
+                        <h3>Filtrar por Equipo</h3>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Primera División</label>
+                        <div class="custom-select" id="primera-select">
+                            <span class="selected-option">Seleccionar equipo</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                            <div class="options-list hidden">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="Buscar equipo...">
+                                </div>
+                                <!-- Options will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Segunda División</label>
+                        <div class="custom-select" id="segunda-select">
+                            <span class="selected-option">Seleccionar equipo</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                            <div class="options-list hidden">
+                                <div class="search-container">
+                                    <input type="text" class="search-input" placeholder="Buscar equipo...">
+                                </div>
+                                <!-- Options will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="#" class="view-all-link">
+                        <i class="fa-solid fa-layer-group"></i> Ver Todos los Equipos
+                    </a>
+                </div>
+            </aside>
+        </div>
+
+        <!-- CHAT VIEW -->
+        <div id="chat-view" class="chat-layout hidden">
+            <aside class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <h3>Salas de Chat</h3>
+                </div>
+                <div class="chat-rooms-list">
+                    <div class="chat-category">
+                        <h4>General</h4>
+                        <div class="room-item" data-room="general">
+                            <i class="fa-solid fa-comments"></i> General
+                        </div>
+                        <div class="room-item" data-room="primera">
+                            <i class="fa-solid fa-trophy"></i> Primera División
+                        </div>
+                        <div class="room-item" data-room="segunda">
+                            <i class="fa-solid fa-medal"></i> Segunda División
+                        </div>
+                    </div>
+
+                    <div class="chat-category">
+                        <h4>Equipos Primera</h4>
+                        <div id="chat-rooms-primera">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="chat-category">
+                        <h4>Equipos Segunda</h4>
+                        <div id="chat-rooms-segunda">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="chat-main">
+                <div class="chat-header">
+                    <div class="chat-room-info">
+                        <h3 id="current-room-name">Seleccionar chat</h3>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be populated by JS -->
+                    <div class="message system-message select-chat-message">
+                        <i class="fa-solid fa-comments" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                        <p style="font-size: 18px; margin: 0;">Selecciona una sala de chat para comenzar</p>
+                    </div>
+                </div>
+
+                <div class="chat-input-area hidden" id="chat-input-container">
+                    <input type="text" placeholder="Escribe un mensaje..." id="message-input">
+                    <button class="btn btn-primary" id="send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Iniciar Sesión</h2>
+            <form class="login-form">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" placeholder="Nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+                <div class="form-footer">
+                    <button type="button" id="show-register" class="btn btn-secondary btn-full">
+                        Crear Cuenta <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="register-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Crear Cuenta</h2>
+            <form class="register-form">
+                <div class="form-group">
+                    <label for="reg-username">Usuario</label>
+                    <input type="text" id="reg-username" placeholder="Elige un nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label>Equipo Favorito</label>
+                    <input type="hidden" id="reg-team-value" name="favoriteTeam">
+                    <div class="custom-select" id="reg-team-select">
+                        <span class="selected-option">Seleccionar equipo</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                        <div class="options-list hidden">
+                            <div class="search-container">
+                                <input type="text" class="search-input" placeholder="Buscar equipo...">
+                            </div>
+                            <!-- Options will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Contraseña</label>
+                    <input type="password" id="reg-password" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="reg-confirm-password">Confirmar Contraseña</label>
+                    <input type="password" id="reg-confirm-password" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Registrarse</button>
+                <div class="form-footer">
+                    <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia Sesión</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NEW TOPIC MODAL -->
+    <div id="topic-modal" class="modal hidden">
+        <div class="modal-content modal-wide">
+            <span class="close-modal">&times;</span>
+            <h2>Crear Nuevo Tema</h2>
+            <form class="topic-form" id="topic-form">
+                <div class="form-group">
+                    <label for="topic-title">Título</label>
+                    <input type="text" id="topic-title" placeholder="Escribe un título descriptivo" required>
+                </div>
+                <div class="form-group">
+                    <label for="topic-category">Categoría</label>
+                    <select id="topic-category" class="form-select" required>
+                        <option value="">Selecciona una categoría</option>
+                        <option value="primera">Primera División</option>
+                        <option value="segunda">Segunda División</option>
+                        <option value="fichajes">Fichajes</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Equipo (opcional)</label>
+                    <input type="hidden" id="topic-team-value" name="team">
+                    <div class="custom-select" id="topic-team-select">
+                        <span class="selected-option">Seleccionar equipo</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                        <div class="options-list hidden">
+                            <div class="search-container">
+                                <input type="text" class="search-input" placeholder="Buscar equipo...">
+                            </div>
+                            <!-- Options will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="topic-content">Contenido</label>
+                    <textarea id="topic-content" placeholder="Escribe el contenido de tu tema..." rows="6"
+                        required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Publicar Tema</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
