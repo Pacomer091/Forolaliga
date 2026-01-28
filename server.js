@@ -99,10 +99,17 @@ app.post('/api/messages', (req, res) => {
     });
 });
 
-// Get messages for a room
+// Get messages for a room (with user's favorite team)
 app.get('/api/messages/:room', (req, res) => {
     const room = req.params.room;
-    const sql = 'SELECT * FROM messages WHERE room = ? ORDER BY created_at ASC LIMIT 100';
+    const sql = `
+        SELECT m.*, u.favorite_team 
+        FROM messages m 
+        LEFT JOIN users u ON m.username = u.username 
+        WHERE m.room = ? 
+        ORDER BY m.created_at ASC 
+        LIMIT 100
+    `;
 
     db.all(sql, [room], (err, rows) => {
         if (err) {
@@ -142,21 +149,25 @@ app.post('/api/topics', (req, res) => {
     });
 });
 
-// Get all topics (with optional category filter)
+// Get all topics (with optional category filter and user's favorite team)
 app.get('/api/topics', (req, res) => {
     const category = req.query.category;
     const team = req.query.team;
 
-    let sql = 'SELECT * FROM topics';
+    let sql = `
+        SELECT t.*, u.favorite_team as author_favorite_team 
+        FROM topics t 
+        LEFT JOIN users u ON t.username = u.username
+    `;
     let params = [];
     let conditions = [];
 
     if (category) {
-        conditions.push('category = ?');
+        conditions.push('t.category = ?');
         params.push(category);
     }
     if (team) {
-        conditions.push('team = ?');
+        conditions.push('t.team = ?');
         params.push(team);
     }
 
@@ -164,7 +175,7 @@ app.get('/api/topics', (req, res) => {
         sql += ' WHERE ' + conditions.join(' AND ');
     }
 
-    sql += ' ORDER BY created_at DESC LIMIT 50';
+    sql += ' ORDER BY t.created_at DESC LIMIT 50';
 
     db.all(sql, params, (err, rows) => {
         if (err) {
@@ -174,14 +185,19 @@ app.get('/api/topics', (req, res) => {
     });
 });
 
-// Get a single topic by ID
+// Get a single topic by ID (with user's favorite team)
 app.get('/api/topics/:id', (req, res) => {
     const id = req.params.id;
 
     // Increment view count
     db.run('UPDATE topics SET views = views + 1 WHERE id = ?', [id]);
 
-    const sql = 'SELECT * FROM topics WHERE id = ?';
+    const sql = `
+        SELECT t.*, u.favorite_team as author_favorite_team 
+        FROM topics t 
+        LEFT JOIN users u ON t.username = u.username 
+        WHERE t.id = ?
+    `;
     db.get(sql, [id], (err, row) => {
         if (err) {
             return res.status(500).json({ error: err.message });
@@ -190,6 +206,55 @@ app.get('/api/topics/:id', (req, res) => {
             return res.status(404).json({ error: 'Topic not found' });
         }
         res.json(row);
+    });
+});
+
+// Get replies for a topic (with user's favorite team)
+app.get('/api/topics/:id/replies', (req, res) => {
+    const topicId = req.params.id;
+    const sql = `
+        SELECT r.*, u.favorite_team 
+        FROM replies r 
+        LEFT JOIN users u ON r.username = u.username 
+        WHERE r.topic_id = ? 
+        ORDER BY r.created_at ASC
+    `;
+
+    db.all(sql, [topicId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// Create a reply
+app.post('/api/replies', (req, res) => {
+    const { topicId, username, content } = req.body;
+
+    if (!topicId || !username || !content) {
+        return res.status(400).json({ error: 'Topic ID, username, and content are required' });
+    }
+
+    const sql = 'INSERT INTO replies (topic_id, username, content) VALUES (?, ?, ?)';
+    const params = [topicId, username, content];
+
+    db.run(sql, params, function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        // Increment replies count on the topic
+        db.run('UPDATE topics SET replies = replies + 1 WHERE id = ?', [topicId]);
+
+        res.json({
+            message: 'Reply created successfully',
+            id: this.lastID,
+            topic_id: topicId,
+            username,
+            content,
+            created_at: new Date().toISOString()
+        });
     });
 });
 

@@ -53,6 +53,21 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.log('Topics table created or already exists.');
             }
         });
+
+        db.run(`CREATE TABLE IF NOT EXISTS replies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (topic_id) REFERENCES topics(id)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating replies table: ' + err.message);
+            } else {
+                console.log('Replies table created or already exists.');
+            }
+        });
     }
 });
 

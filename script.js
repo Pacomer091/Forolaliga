@@ -248,8 +248,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             messages.forEach(msg => {
                 const msgDiv = document.createElement('div');
-                msgDiv.className = msg.username === currentUsername ? 'message message-sent' : 'message message-received';
-                msgDiv.innerHTML = `<strong>${msg.username}:</strong> ${msg.content}`;
+                const isSent = msg.username === currentUsername;
+                msgDiv.className = isSent ? 'message message-sent' : 'message message-received';
+
+                // Get avatar HTML using favorite_team from API
+                const avatarHtml = getAvatarHtml(msg.username, msg.favorite_team, 'avatar-chat');
+
+                msgDiv.innerHTML = `
+                    <div class="chat-message-content">
+                        ${!isSent ? avatarHtml : ''}
+                        <div class="message-bubble">
+                            <span class="message-author">@${msg.username}</span>
+                            <span class="message-text">${escapeHtml(msg.content)}</span>
+                        </div>
+                        ${isSent ? avatarHtml : ''}
+                    </div>
+                `;
                 chatMessages.appendChild(msgDiv);
             });
 
@@ -352,8 +366,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     messages.forEach(msg => {
                         const msgDiv = document.createElement('div');
-                        msgDiv.className = msg.username === currentUsername ? 'message message-sent' : 'message message-received';
-                        msgDiv.innerHTML = `<strong>${msg.username}:</strong> ${msg.content}`;
+                        const isSent = msg.username === currentUsername;
+                        msgDiv.className = isSent ? 'message message-sent' : 'message message-received';
+
+                        // Get avatar HTML using favorite_team from API
+                        const avatarHtml = getAvatarHtml(msg.username, msg.favorite_team, 'avatar-chat');
+
+                        msgDiv.innerHTML = `
+                            <div class="chat-message-content">
+                                ${!isSent ? avatarHtml : ''}
+                                <div class="message-bubble">
+                                    <span class="message-author">@${msg.username}</span>
+                                    <span class="message-text">${escapeHtml(msg.content)}</span>
+                                </div>
+                                ${isSent ? avatarHtml : ''}
+                            </div>
+                        `;
                         chatMessages.appendChild(msgDiv);
                     });
 
@@ -569,9 +597,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function createTopicCard(topic) {
         const card = document.createElement('div');
         card.className = 'topic-card';
+        card.style.cursor = 'pointer';
 
         const timeAgo = getTimeAgo(new Date(topic.created_at));
-        const initial = topic.username.charAt(0).toUpperCase();
         const categoryLabel = {
             'primera': 'Primera',
             'segunda': 'Segunda',
@@ -579,13 +607,29 @@ document.addEventListener('DOMContentLoaded', () => {
             'general': 'General'
         }[topic.category] || topic.category;
 
+        // Find team logo if team is specified for the topic
+        let teamBadge = '';
+        if (topic.team) {
+            const team = allTeams.find(t => t.name === topic.team);
+            if (team) {
+                teamBadge = `<div class="topic-team-badge">
+                    <img src="${team.logo}" alt="${team.name}" class="team-logo-sm" title="${team.name}">
+                </div>`;
+            }
+        }
+
+        // Get avatar based on author's favorite team
+        const avatarHtml = getAvatarHtml(topic.username, topic.author_favorite_team);
+
         card.innerHTML = `
             <div class="topic-header">
-                <div class="user-avatar">${initial}</div>
+                ${avatarHtml}
                 <div class="topic-meta">
                     <span class="tag tag-${topic.category}">${categoryLabel}</span>
+                    ${topic.team ? `<span class="team-tag">${topic.team}</span>` : ''}
                     <span class="time">· ${timeAgo}</span>
                 </div>
+                ${teamBadge}
             </div>
             <h3 class="topic-title">${escapeHtml(topic.title)}</h3>
             <p class="topic-excerpt">${escapeHtml(topic.content.substring(0, 150))}${topic.content.length > 150 ? '...' : ''}</p>
@@ -597,6 +641,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="username">@${escapeHtml(topic.username)}</span>
             </div>
         `;
+
+        // Make card clickable to open topic detail
+        card.addEventListener('click', () => openTopicDetail(topic.id));
 
         return card;
     }
@@ -617,6 +664,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Helper function to get user avatar (team logo or initial)
+    function getAvatarHtml(username, favoriteTeam, sizeClass = '') {
+        if (favoriteTeam) {
+            const team = allTeams.find(t => t.name === favoriteTeam);
+            if (team) {
+                return `<div class="user-avatar ${sizeClass}" title="${favoriteTeam}">
+                    <img src="${team.logo}" alt="${favoriteTeam}" class="avatar-team-logo">
+                </div>`;
+            }
+        }
+        // Fallback to initial
+        const initial = username ? username.charAt(0).toUpperCase() : '?';
+        return `<div class="user-avatar ${sizeClass}">${initial}</div>`;
     }
 
     // New Topic Button
@@ -700,6 +762,173 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error de conexión con el servidor');
+            }
+        });
+    }
+
+    // --- TOPIC DETAIL & REPLIES LOGIC ---
+    const topicDetailModal = document.getElementById('topic-detail-modal');
+    const topicDetailContent = document.getElementById('topic-detail-content');
+    const repliesContainer = document.getElementById('replies-container');
+    const replyForm = document.getElementById('reply-form');
+    const loginToReply = document.getElementById('login-to-reply');
+    let currentTopicId = null;
+
+    async function openTopicDetail(topicId) {
+        if (!topicDetailModal) return;
+        currentTopicId = topicId;
+
+        try {
+            // Fetch topic details
+            const topicResponse = await fetch(`/api/topics/${topicId}`);
+            const topic = await topicResponse.json();
+
+            // Find team logo
+            let teamBadge = '';
+            if (topic.team) {
+                const team = allTeams.find(t => t.name === topic.team);
+                if (team) {
+                    teamBadge = `<img src="${team.logo}" alt="${team.name}" class="topic-detail-team-logo" title="${team.name}">`;
+                }
+            }
+
+            const categoryLabel = {
+                'primera': 'Primera',
+                'segunda': 'Segunda',
+                'fichajes': 'Fichajes',
+                'general': 'General'
+            }[topic.category] || topic.category;
+
+            topicDetailContent.innerHTML = `
+                <div class="topic-detail-header">
+                    ${teamBadge}
+                    <div class="topic-detail-info">
+                        <span class="tag tag-${topic.category}">${categoryLabel}</span>
+                        ${topic.team ? `<span class="team-tag">${topic.team}</span>` : ''}
+                        <span class="topic-detail-author">por @${escapeHtml(topic.username)}</span>
+                        <span class="topic-detail-time">${getTimeAgo(new Date(topic.created_at))}</span>
+                    </div>
+                </div>
+                <h2 class="topic-detail-title">${escapeHtml(topic.title)}</h2>
+                <div class="topic-detail-body">${escapeHtml(topic.content)}</div>
+                <div class="topic-detail-stats">
+                    <span><i class="fa-regular fa-eye"></i> ${topic.views} visualizaciones</span>
+                    <span><i class="fa-regular fa-comment"></i> ${topic.replies} respuestas</span>
+                </div>
+            `;
+
+            // Load replies
+            await loadReplies(topicId);
+
+            // Show/hide reply form based on login status
+            const savedUser = localStorage.getItem('forolaliga_user');
+            if (savedUser) {
+                replyForm.classList.remove('hidden');
+                loginToReply.classList.add('hidden');
+            } else {
+                replyForm.classList.add('hidden');
+                loginToReply.classList.remove('hidden');
+            }
+
+            topicDetailModal.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error loading topic:', error);
+            alert('Error al cargar el tema');
+        }
+    }
+
+    async function loadReplies(topicId) {
+        try {
+            const response = await fetch(`/api/topics/${topicId}/replies`);
+            const replies = await response.json();
+
+            if (replies.length === 0) {
+                repliesContainer.innerHTML = '<p class="no-replies">No hay respuestas todavía. ¡Sé el primero en responder!</p>';
+                return;
+            }
+
+            repliesContainer.innerHTML = '';
+            replies.forEach(reply => {
+                const replyDiv = document.createElement('div');
+                replyDiv.className = 'reply-item';
+
+                // Use avatar with team logo
+                const avatarHtml = getAvatarHtml(reply.username, reply.favorite_team, 'user-avatar-sm');
+
+                replyDiv.innerHTML = `
+                    <div class="reply-header">
+                        ${avatarHtml}
+                        <span class="reply-username">@${escapeHtml(reply.username)}</span>
+                        <span class="reply-time">${getTimeAgo(new Date(reply.created_at))}</span>
+                    </div>
+                    <div class="reply-content">${escapeHtml(reply.content)}</div>
+                `;
+                repliesContainer.appendChild(replyDiv);
+            });
+        } catch (error) {
+            console.error('Error loading replies:', error);
+            repliesContainer.innerHTML = '<p class="no-replies">Error al cargar las respuestas</p>';
+        }
+    }
+
+    // Reply form submission
+    if (replyForm) {
+        replyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const savedUser = localStorage.getItem('forolaliga_user');
+            if (!savedUser) {
+                alert('Debes iniciar sesión para responder');
+                return;
+            }
+
+            const user = JSON.parse(savedUser);
+            const content = document.getElementById('reply-content').value.trim();
+
+            if (!content) {
+                alert('Escribe una respuesta');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/replies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topicId: currentTopicId,
+                        username: user.username,
+                        content
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('reply-content').value = '';
+                    await loadReplies(currentTopicId);
+                    // Also reload topics to update reply count
+                    loadTopics();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión con el servidor');
+            }
+        });
+    }
+
+    // Close topic detail modal
+    if (topicDetailModal) {
+        const closeBtn = topicDetailModal.querySelector('.close-modal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                topicDetailModal.classList.add('hidden');
+            });
+        }
+
+        topicDetailModal.addEventListener('click', (e) => {
+            if (e.target === topicDetailModal) {
+                topicDetailModal.classList.add('hidden');
             }
         });
     }

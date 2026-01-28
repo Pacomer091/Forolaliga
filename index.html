@@ -265,6 +265,33 @@
         </div>
     </div>
 
+    <!-- TOPIC DETAIL MODAL -->
+    <div id="topic-detail-modal" class="modal hidden">
+        <div class="modal-content modal-wide">
+            <span class="close-modal">&times;</span>
+            <div id="topic-detail-content">
+                <!-- Topic content will be loaded here -->
+            </div>
+            <div class="replies-section">
+                <h3><i class="fa-solid fa-comments"></i> Respuestas</h3>
+                <div id="replies-container">
+                    <!-- Replies will be loaded here -->
+                </div>
+                <form id="reply-form" class="reply-form hidden">
+                    <div class="form-group">
+                        <textarea id="reply-content" placeholder="Escribe tu respuesta..." rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-reply"></i> Responder
+                    </button>
+                </form>
+                <p class="login-to-reply hidden" id="login-to-reply">
+                    <i class="fa-solid fa-lock"></i> Inicia sesión para responder
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 

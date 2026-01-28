@@ -876,4 +876,255 @@ body {
 
 .empty-topics p {
     font-size: 1rem;
+} 
+ 
+/* Topic Team Badge */
+.topic-team-badge {
+    margin-left: auto;
+}
+
+.topic-team-badge img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.team-tag {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Topic Detail Modal */
+.topic-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.topic-detail-team-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.topic-detail-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.topic-detail-author {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.topic-detail-time {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.topic-detail-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.topic-detail-body {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    white-space: pre-wrap;
+}
+
+.topic-detail-stats {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.topic-detail-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Replies Section */
+.replies-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.replies-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+#replies-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.reply-item {
+    background-color: rgba(15, 23, 42, 0.5);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border-left: 3px solid var(--accent-blue);
+}
+
+.reply-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-avatar-sm {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+.reply-username {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.reply-time {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+.reply-content {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding-left: calc(28px + 0.75rem);
+}
+
+.no-replies {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+/* Reply Form */
+.reply-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reply-form textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s;
+}
+
+.reply-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    background-color: rgba(15, 23, 42, 0.9);
+}
+
+.reply-form button {
+    align-self: flex-end;
+}
+
+.login-to-reply {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 1rem;
+    background-color: rgba(15, 23, 42, 0.5);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Avatar with Team Logo */
+.avatar-team-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.user-avatar.avatar-chat {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+/* Chat Message with Avatar */
+.chat-message-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.message-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.message-author {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.message-text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.message-received .chat-message-content {
+    flex-direction: row;
+}
+
+.message-sent .chat-message-content {
+    flex-direction: row-reverse;
+}
+
+.message-sent .message-bubble {
+    text-align: right;
+}
+
+/* Override for topic detail with author avatar */
+.topic-detail-header .user-avatar {
+    width: 48px;
+    height: 48px;
 }
