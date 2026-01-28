@@ -697,6 +697,46 @@ body {
     max-width: 560px;
 }
 
+/* Topic Detail Modal - Extra Large */
+#topic-detail-modal .modal-content {
+    max-width: 900px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#topic-detail-modal .topic-detail-title {
+    font-size: 2rem;
+}
+
+#topic-detail-modal .topic-detail-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+#topic-detail-modal .topic-detail-team-logo {
+    width: 80px;
+    height: 80px;
+}
+
+#topic-detail-modal .topic-detail-header .user-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+}
+
+#topic-detail-modal #replies-container {
+    max-height: 400px;
+}
+
+#topic-detail-modal .reply-item {
+    padding: 1.25rem;
+}
+
+#topic-detail-modal .reply-content {
+    font-size: 1rem;
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(20px);
@@ -876,8 +916,8 @@ body {
 
 .empty-topics p {
     font-size: 1rem;
-} 
- 
+}
+
 /* Topic Team Badge */
 .topic-team-badge {
     margin-left: auto;
