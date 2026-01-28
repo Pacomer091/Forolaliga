@@ -1,13 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     console.log('Foro LaLiga loaded');
 
     // --- DATA ---
     const primeraTeams = [
         { name: "Athletic Club", id: 621 },
-        { name: "Atlético de Madrid", id: 13 },
+        { name: "AtlÃ©tico de Madrid", id: 13 },
         { name: "CA Osasuna", id: 331 },
         { name: "Celta de Vigo", id: 940 },
-        { name: "Deportivo Alavés", id: 1108 },
+        { name: "Deportivo AlavÃ©s", id: 1108 },
         { name: "Elche CF", id: 1531 },
         { name: "FC Barcelona", id: 131 },
         { name: "Getafe CF", id: 3709 },
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: "Rayo Vallecano", id: 367 },
         { name: "RCD Espanyol", id: 714 },
         { name: "RCD Mallorca", id: 237 },
-        { name: "Real Betis Balompié", id: 150 },
+        { name: "Real Betis BalompiÃ©", id: 150 },
         { name: "Real Madrid CF", id: 418 },
         { name: "Real Oviedo", id: 2497 },
         { name: "Real Sociedad", id: 681 },
@@ -26,28 +26,28 @@ document.addEventListener('DOMContentLoaded', () => {
     ].map(t => ({ ...t, logo: `https://tmssl.akamaized.net/images/wappen/head/${t.id}.png` }));
 
     const segundaTeams = [
-        { name: "Albacete Balompié", id: 1532 },
+        { name: "Albacete BalompiÃ©", id: 1532 },
         { name: "AD Ceuta FC", id: 8568 },
         { name: "Real Racing Club", id: 630 },
-        { name: "UD Almería", id: 3302 },
-        { name: "Córdoba CF", id: 993 },
+        { name: "UD AlmerÃ­a", id: 3302 },
+        { name: "CÃ³rdoba CF", id: 993 },
         { name: "Real Sociedad B", id: 9899 },
         { name: "FC Andorra", id: 10718 },
         { name: "Cultural Leonesa", id: 4542 },
-        { name: "Real Sporting de Gijón", id: 2448 },
+        { name: "Real Sporting de GijÃ³n", id: 2448 },
         { name: "Burgos CF", id: 1536 },
         { name: "RC Deportivo", id: 897 },
         { name: "Real Valladolid CF", id: 366 },
-        { name: "Cádiz CF", id: 2687 },
+        { name: "CÃ¡diz CF", id: 2687 },
         { name: "SD Eibar", id: 1533 },
         { name: "Real Zaragoza", id: 142 },
-        { name: "CD Castellón", id: 2502 },
+        { name: "CD CastellÃ³n", id: 2502 },
         { name: "Granada CF", id: 16795 },
         { name: "UD Las Palmas", id: 472 },
-        { name: "CD Leganés", id: 1244 },
+        { name: "CD LeganÃ©s", id: 1244 },
         { name: "SD Huesca", id: 5358 },
-        { name: "Málaga CF", id: 1084 },
-        { name: "CD Mirandés", id: 13222 }
+        { name: "MÃ¡laga CF", id: 1084 },
+        { name: "CD MirandÃ©s", id: 13222 }
     ].map(t => ({ ...t, logo: `https://tmssl.akamaized.net/images/wappen/head/${t.id}.png` }));
 
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CHAT LOGIC ---
     const chatRoomsPrimera = document.getElementById('chat-rooms-primera');
     const chatRoomsSegunda = document.getElementById('chat-rooms-segunda');
-    const currentRoomName = document.getElementById('current-room-name');
+    const window.currentRoomName = document.getElementById('current-room-name');
     const chatMessages = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
@@ -229,10 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    let currentRoom = null;
+    window.currentRoom = null;  // Made global for GIF picker access
     const chatInputContainer = document.getElementById('chat-input-container');
 
-    async function loadMessages(roomName) {
+    window.loadMessages = async function (roomName) {
         try {
             const response = await fetch(`/api/messages/${encodeURIComponent(roomName)}`);
             const messages = await response.json();
@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
         element.classList.add('active');
 
         // Update header
-        currentRoomName.textContent = roomName;
-        currentRoom = roomName;
+        window.currentRoomName.textContent = roomName;
+        window.currentRoom = roomName;
 
         // Show chat input area
         if (chatInputContainer) {
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const savedUser = localStorage.getItem('forolaliga_user');
         if (!savedUser) {
-            alert('Debes iniciar sesión para enviar mensajes');
+            alert('Debes iniciar sesiÃ³n para enviar mensajes');
             return;
         }
 
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    room: currentRoom,
+                    room: window.currentRoom,
                     username: user.username,
                     content: text
                 })
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error de conexión con el servidor');
+            alert('Error de conexiÃ³n con el servidor');
         }
     }
 
@@ -342,10 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastMessageId = 0;
 
     async function refreshMessages() {
-        if (!currentRoom) return;
+        if (!window.currentRoom) return;
 
         try {
-            const response = await fetch(`/api/messages/${encodeURIComponent(currentRoom)}`);
+            const response = await fetch(`/api/messages/${encodeURIComponent(window.currentRoom)}`);
             const messages = await response.json();
 
             if (messages.length > 0) {
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     chatMessages.innerHTML = `
                         <div class="message system-message">
-                            Has entrado a la sala: ${currentRoom}
+                            Has entrado a la sala: ${window.currentRoom}
                         </div>
                     `;
 
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginBtn.addEventListener('click', () => {
             if (loginBtn.classList.contains('logged-in')) {
                 // If logged in, clicking logs out
-                if (confirm('¿Cerrar sesión?')) {
+                if (confirm('Â¿Cerrar sesiÃ³n?')) {
                     logout();
                 }
             } else {
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexión con el servidor');
+                    alert('Error de conexiÃ³n con el servidor');
                 }
             });
         }
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const favoriteTeam = document.getElementById('reg-team-value').value;
 
                 if (password !== confirmPassword) {
-                    alert('Las contraseñas no coinciden');
+                    alert('Las contraseÃ±as no coinciden');
                     return;
                 }
 
@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Registro exitoso! Ahora puedes iniciar sesión.');
+                        alert('Registro exitoso! Ahora puedes iniciar sesiÃ³n.');
                         // Switch to login
                         registerModal.classList.add('hidden');
                         loginModal.classList.remove('hidden');
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexión con el servidor');
+                    alert('Error de conexiÃ³n con el servidor');
                 }
             });
         }
@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 topicsContainer.innerHTML = `
                     <div class="empty-topics">
                         <i class="fa-solid fa-comments"></i>
-                        <p>No hay temas todavía. ¡Sé el primero en crear uno!</p>
+                        <p>No hay temas todavÃ­a. Â¡SÃ© el primero en crear uno!</p>
                     </div>
                 `;
                 return;
@@ -627,12 +627,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="topic-meta">
                     <span class="tag tag-${topic.category}">${categoryLabel}</span>
                     ${topic.team ? `<span class="team-tag">${topic.team}</span>` : ''}
-                    <span class="time">· ${timeAgo}</span>
+                    <span class="time">Â· ${timeAgo}</span>
                 </div>
                 ${teamBadge}
             </div>
             <h3 class="topic-title">${escapeHtml(topic.title)}</h3>
-            <p class="topic-excerpt">${escapeHtml(topic.content.substring(0, 150))}${topic.content.length > 150 ? '...' : ''}</p>
+            <p class="topic-excerpt">${getCleanExcerpt(topic.content, 150)}${topic.content.replace(/\[GIF\].*?\[\/GIF\]/g, '').length > 150 ? '...' : ''}${topic.content.includes('[GIF]') ? ' <i class="fa-solid fa-image" title="Contiene GIF"></i>' : ''}</p>
             <div class="topic-footer">
                 <div class="topic-stats">
                     <span class="stat"><i class="fa-regular fa-comment"></i> ${topic.replies || 0}</span>
@@ -678,6 +678,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return safeContent;
     }
 
+    // Helper function to get clean excerpt without GIF tags
+    function getCleanExcerpt(content, maxLength) {
+        if (!content) return '';
+        // Remove [GIF] tags and their content
+        const cleanContent = content.replace(/\[GIF\].*?\[\/GIF\]/g, '').trim();
+        // Escape HTML and truncate
+        return escapeHtml(cleanContent.substring(0, maxLength));
+    }
+
     // Helper function to get user avatar (team logo or initial)
     function getAvatarHtml(username, favoriteTeam, sizeClass = '') {
         if (favoriteTeam) {
@@ -698,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newTopicBtn.addEventListener('click', () => {
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para crear un tema');
+                alert('Debes iniciar sesiÃ³n para crear un tema');
                 loginModal.classList.remove('hidden');
                 return;
             }
@@ -728,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para crear un tema');
+                alert('Debes iniciar sesiÃ³n para crear un tema');
                 return;
             }
 
@@ -765,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('¡Tema creado exitosamente!');
+                    alert('Â¡Tema creado exitosamente!');
                     topicModal.classList.add('hidden');
                     topicForm.reset();
                     // Reset team dropdown
@@ -786,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexión con el servidor');
+                alert('Error de conexiÃ³n con el servidor');
             }
         });
     }
@@ -868,7 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const replies = await response.json();
 
             if (replies.length === 0) {
-                repliesContainer.innerHTML = '<p class="no-replies">No hay respuestas todavía. ¡Sé el primero en responder!</p>';
+                repliesContainer.innerHTML = '<p class="no-replies">No hay respuestas todavÃ­a. Â¡SÃ© el primero en responder!</p>';
                 return;
             }
 
@@ -903,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para responder');
+                alert('Debes iniciar sesiÃ³n para responder');
                 return;
             }
 
@@ -949,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexión con el servidor');
+                alert('Error de conexiÃ³n con el servidor');
             }
         });
     }
@@ -1097,7 +1106,7 @@ function selectGif(gifUrl) {
 // Send Chat GIF
 async function sendChatGif(gifUrl) {
     const savedUser = localStorage.getItem('forolaliga_user');
-    if (!savedUser || !currentRoom) return;
+    if (!savedUser || !window.currentRoom) return;
 
     const user = JSON.parse(savedUser);
 
@@ -1106,7 +1115,7 @@ async function sendChatGif(gifUrl) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                room: currentRoom,
+                room: window.currentRoom,
                 username: user.username,
                 content: `[GIF]${gifUrl}[/GIF]`
             })
@@ -1114,7 +1123,7 @@ async function sendChatGif(gifUrl) {
 
         if (response.ok) {
             // Reload messages to show the GIF
-            loadMessages(currentRoom);
+            window.loadMessages(window.currentRoom);
         }
     } catch (error) {
         console.error('Error sending GIF:', error);
