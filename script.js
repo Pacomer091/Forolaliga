@@ -4,10 +4,10 @@
     // --- DATA ---
     const primeraTeams = [
         { name: "Athletic Club", id: 621 },
-        { name: "AtlÃ©tico de Madrid", id: 13 },
+        { name: "Atlético de Madrid", id: 13 },
         { name: "CA Osasuna", id: 331 },
         { name: "Celta de Vigo", id: 940 },
-        { name: "Deportivo AlavÃ©s", id: 1108 },
+        { name: "Deportivo Alavés", id: 1108 },
         { name: "Elche CF", id: 1531 },
         { name: "FC Barcelona", id: 131 },
         { name: "Getafe CF", id: 3709 },
@@ -16,7 +16,7 @@
         { name: "Rayo Vallecano", id: 367 },
         { name: "RCD Espanyol", id: 714 },
         { name: "RCD Mallorca", id: 237 },
-        { name: "Real Betis BalompiÃ©", id: 150 },
+        { name: "Real Betis Balompié", id: 150 },
         { name: "Real Madrid CF", id: 418 },
         { name: "Real Oviedo", id: 2497 },
         { name: "Real Sociedad", id: 681 },
@@ -26,33 +26,30 @@
     ].map(t => ({ ...t, logo: `https://tmssl.akamaized.net/images/wappen/head/${t.id}.png` }));
 
     const segundaTeams = [
-        { name: "Albacete BalompiÃ©", id: 1532 },
+        { name: "Albacete Balompié", id: 1532 },
         { name: "AD Ceuta FC", id: 8568 },
         { name: "Real Racing Club", id: 630 },
-        { name: "UD AlmerÃ­a", id: 3302 },
-        { name: "CÃ³rdoba CF", id: 993 },
+        { name: "UD Almería", id: 3302 },
+        { name: "Córdoba CF", id: 993 },
         { name: "Real Sociedad B", id: 9899 },
         { name: "FC Andorra", id: 10718 },
         { name: "Cultural Leonesa", id: 4542 },
-        { name: "Real Sporting de GijÃ³n", id: 2448 },
+        { name: "Real Sporting de Gijón", id: 2448 },
         { name: "Burgos CF", id: 1536 },
         { name: "RC Deportivo", id: 897 },
         { name: "Real Valladolid CF", id: 366 },
-        { name: "CÃ¡diz CF", id: 2687 },
+        { name: "Cádiz CF", id: 2687 },
         { name: "SD Eibar", id: 1533 },
         { name: "Real Zaragoza", id: 142 },
-        { name: "CD CastellÃ³n", id: 2502 },
+        { name: "CD Castellón", id: 2502 },
         { name: "Granada CF", id: 16795 },
         { name: "UD Las Palmas", id: 472 },
-        { name: "CD LeganÃ©s", id: 1244 },
+        { name: "CD Leganés", id: 1244 },
         { name: "SD Huesca", id: 5358 },
-        { name: "MÃ¡laga CF", id: 1084 },
-        { name: "CD MirandÃ©s", id: 13222 }
+        { name: "Málaga CF", id: 1084 },
+        { name: "CD Mirandés", id: 13222 }
     ].map(t => ({ ...t, logo: `https://tmssl.akamaized.net/images/wappen/head/${t.id}.png` }));
 
-
-    // --- POPULATE REGISTRATION DROPDOWN ---
-    // All teams combined for registration (sorted alphabetically)
     const allTeams = [...primeraTeams, ...segundaTeams].sort((a, b) => a.name.localeCompare(b.name));
 
     // --- VIEW SWITCHING ---
@@ -65,12 +62,8 @@
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
-
-            // Update buttons
             navBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            // Update views
             Object.keys(views).forEach(key => {
                 if (key === targetId) {
                     views[key].classList.remove('hidden');
@@ -81,8 +74,7 @@
         });
     });
 
-
-    // --- DROPDOWNS (FORUM) ---
+    // --- DROPDOWNS ---
     function setupDropdown(elementId, teams, hiddenInputId = null) {
         const selectElement = document.getElementById(elementId);
         if (!selectElement) return;
@@ -103,15 +95,12 @@
             filteredTeams.forEach(team => {
                 const div = document.createElement('div');
                 div.className = 'option-item';
-
                 const img = document.createElement('img');
                 img.src = team.logo;
                 img.alt = team.name;
                 img.className = 'team-logo-sm';
-
                 const span = document.createElement('span');
                 span.textContent = team.name;
-
                 div.appendChild(img);
                 div.appendChild(span);
 
@@ -123,15 +112,9 @@
                     selectedImg.className = 'team-logo-sm';
                     selectedSpan.appendChild(selectedImg);
                     selectedSpan.appendChild(document.createTextNode(team.name));
-
                     selectedSpan.style.color = '#fff';
                     optionsList.classList.add('hidden');
-                    selectElement.style.borderColor = '#334155';
-
-                    // Update hidden input if provided
-                    if (hiddenInput) {
-                        hiddenInput.value = team.name;
-                    }
+                    if (hiddenInput) hiddenInput.value = team.name;
                 });
                 optionsList.appendChild(div);
             });
@@ -149,77 +132,61 @@
             document.querySelectorAll('.options-list').forEach(list => {
                 if (list !== optionsList) list.classList.add('hidden');
             });
-            document.querySelectorAll('.custom-select').forEach(sel => {
-                if (sel !== selectElement) sel.style.borderColor = '#334155';
-            });
-
             if (isHidden) {
                 optionsList.classList.remove('hidden');
-                selectElement.style.borderColor = '#3b82f6';
                 if (searchInput) searchInput.focus();
             } else {
                 optionsList.classList.add('hidden');
-                selectElement.style.borderColor = '#334155';
             }
         });
     }
 
     setupDropdown('primera-select', primeraTeams);
     setupDropdown('segunda-select', segundaTeams);
-
-    // Setup registration team dropdown
     setupDropdown('reg-team-select', allTeams, 'reg-team-value');
+    setupDropdown('topic-team-select', allTeams, 'topic-team-value');
 
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.custom-select')) {
             document.querySelectorAll('.options-list').forEach(list => list.classList.add('hidden'));
-            document.querySelectorAll('.custom-select').forEach(sel => sel.style.borderColor = '#334155');
         }
     });
-
 
     // --- CHAT LOGIC ---
     const chatRoomsPrimera = document.getElementById('chat-rooms-primera');
     const chatRoomsSegunda = document.getElementById('chat-rooms-segunda');
-    const window.currentRoomName = document.getElementById('current-room-name');
+    const currentRoomNameEl = document.getElementById('current-room-name');
     const chatMessages = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    const chatInputContainer = document.getElementById('chat-input-container');
 
-    // Helper to create room item
+    // Global variables for GIF picker access
+    window.currentRoom = null;
+
     function createRoomItem(team) {
         const div = document.createElement('div');
         div.className = 'room-item';
         div.setAttribute('data-room', team.name);
-
         const img = document.createElement('img');
         img.src = team.logo;
         img.alt = team.name;
         img.className = 'team-logo-sm';
-
         const span = document.createElement('span');
         span.textContent = team.name;
-
         div.appendChild(img);
         div.appendChild(span);
-
         div.addEventListener('click', () => switchRoom(div, team.name));
         return div;
     }
 
-    // Populate Chat Rooms
     if (chatRoomsPrimera) {
-        primeraTeams.forEach(team => {
-            chatRoomsPrimera.appendChild(createRoomItem(team));
-        });
+        primeraTeams.forEach(team => chatRoomsPrimera.appendChild(createRoomItem(team)));
     }
     if (chatRoomsSegunda) {
-        segundaTeams.forEach(team => {
-            chatRoomsSegunda.appendChild(createRoomItem(team));
-        });
+        segundaTeams.forEach(team => chatRoomsSegunda.appendChild(createRoomItem(team)));
     }
 
-    // General rooms listeners
     document.querySelectorAll('.chat-category .room-item').forEach(item => {
         if (!item.parentElement.id.includes('chat-rooms')) {
             item.addEventListener('click', () => {
@@ -228,9 +195,6 @@
             });
         }
     });
-
-    window.currentRoom = null;  // Made global for GIF picker access
-    const chatInputContainer = document.getElementById('chat-input-container');
 
     window.loadMessages = async function (roomName) {
         try {
@@ -251,7 +215,6 @@
                 const isSent = msg.username === currentUsername;
                 msgDiv.className = isSent ? 'message message-sent' : 'message message-received';
 
-                // Get avatar HTML using favorite_team from API
                 const avatarHtml = getAvatarHtml(msg.username, msg.favorite_team, 'avatar-chat');
 
                 msgDiv.innerHTML = `
@@ -271,34 +234,24 @@
         } catch (error) {
             console.error('Error loading messages:', error);
         }
-    }
+    };
 
     function switchRoom(element, roomName) {
-        // Update active state
         document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
-
-        // Update header
-        window.currentRoomName.textContent = roomName;
+        currentRoomNameEl.textContent = roomName;
         window.currentRoom = roomName;
-
-        // Show chat input area
-        if (chatInputContainer) {
-            chatInputContainer.classList.remove('hidden');
-        }
-
-        // Load messages from API
-        loadMessages(roomName);
+        if (chatInputContainer) chatInputContainer.classList.remove('hidden');
+        window.loadMessages(roomName);
     }
 
-    // Send Message
     async function sendMessage() {
         const text = messageInput.value.trim();
         if (!text) return;
 
         const savedUser = localStorage.getItem('forolaliga_user');
         if (!savedUser) {
-            alert('Debes iniciar sesiÃ³n para enviar mensajes');
+            alert('Debes iniciar sesión para enviar mensajes');
             return;
         }
 
@@ -316,18 +269,14 @@
             });
 
             if (response.ok) {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = 'message message-sent';
-                msgDiv.innerHTML = `<strong>${user.username}:</strong> ${text}`;
-                chatMessages.appendChild(msgDiv);
                 messageInput.value = '';
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                window.loadMessages(window.currentRoom);
             } else {
                 alert('Error al enviar mensaje');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error de conexiÃ³n con el servidor');
+            alert('Error de conexión con el servidor');
         }
     }
 
@@ -338,62 +287,22 @@
         });
     }
 
-    // --- AUTO-REFRESH MESSAGES (POLLING) ---
+    // --- AUTO-REFRESH MESSAGES ---
     let lastMessageId = 0;
-
     async function refreshMessages() {
         if (!window.currentRoom) return;
-
         try {
             const response = await fetch(`/api/messages/${encodeURIComponent(window.currentRoom)}`);
             const messages = await response.json();
-
             if (messages.length > 0) {
                 const latestId = Math.max(...messages.map(m => m.id));
-
-                // Only update if there are new messages
                 if (latestId > lastMessageId) {
                     lastMessageId = latestId;
-
-                    const savedUser = localStorage.getItem('forolaliga_user');
-                    const currentUsername = savedUser ? JSON.parse(savedUser).username : null;
-
-                    chatMessages.innerHTML = `
-                        <div class="message system-message">
-                            Has entrado a la sala: ${window.currentRoom}
-                        </div>
-                    `;
-
-                    messages.forEach(msg => {
-                        const msgDiv = document.createElement('div');
-                        const isSent = msg.username === currentUsername;
-                        msgDiv.className = isSent ? 'message message-sent' : 'message message-received';
-
-                        // Get avatar HTML using favorite_team from API
-                        const avatarHtml = getAvatarHtml(msg.username, msg.favorite_team, 'avatar-chat');
-
-                        msgDiv.innerHTML = `
-                            <div class="chat-message-content">
-                                ${!isSent ? avatarHtml : ''}
-                                <div class="message-bubble">
-                                    <span class="message-author">@${msg.username}</span>
-                                    <span class="message-text">${renderContentWithGifs(msg.content, 'message-gif')}</span>
-                                </div>
-                                ${isSent ? avatarHtml : ''}
-                            </div>
-                        `;
-                        chatMessages.appendChild(msgDiv);
-                    });
-
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    window.loadMessages(window.currentRoom);
                 }
             }
-        } catch (error) {
-            // Silent fail for polling
-        }
+        } catch (error) { }
     }
-
-    // Poll for new messages every 3 seconds
     setInterval(refreshMessages, 3000);
 
     // --- MODAL LOGIC ---
@@ -404,7 +313,6 @@
     const showRegisterLink = document.getElementById('show-register');
     const showLoginLink = document.getElementById('show-login');
 
-    // --- SESSION PERSISTENCE ---
     function updateLoginUI(user) {
         if (loginBtn) {
             loginBtn.textContent = user.username;
@@ -420,7 +328,6 @@
         }
     }
 
-    // Check for existing session on page load
     const savedUser = localStorage.getItem('forolaliga_user');
     if (savedUser) {
         try {
@@ -432,36 +339,33 @@
     }
 
     function closeAllModals() {
-        loginModal.classList.add('hidden');
-        registerModal.classList.add('hidden');
+        if (loginModal) loginModal.classList.add('hidden');
+        if (registerModal) registerModal.classList.add('hidden');
+        const topicModal = document.getElementById('topic-modal');
+        if (topicModal) topicModal.classList.add('hidden');
+        const topicDetailModal = document.getElementById('topic-detail-modal');
+        if (topicDetailModal) topicDetailModal.classList.add('hidden');
+        const gifModal = document.getElementById('gif-modal');
+        if (gifModal) gifModal.classList.add('hidden');
     }
 
     if (loginBtn && loginModal && registerModal) {
-        // Open Login or Logout
         loginBtn.addEventListener('click', () => {
             if (loginBtn.classList.contains('logged-in')) {
-                // If logged in, clicking logs out
-                if (confirm('Â¿Cerrar sesiÃ³n?')) {
-                    logout();
-                }
+                if (confirm('¿Cerrar sesión?')) logout();
             } else {
                 loginModal.classList.remove('hidden');
             }
         });
 
-        // Close Buttons
         closeModals.forEach(btn => {
             btn.addEventListener('click', closeAllModals);
         });
 
-        // Close on backdrop click
         window.addEventListener('click', (e) => {
-            if (e.target === loginModal || e.target === registerModal) {
-                closeAllModals();
-            }
+            if (e.target === loginModal || e.target === registerModal) closeAllModals();
         });
 
-        // Switch to Register
         if (showRegisterLink) {
             showRegisterLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -470,7 +374,6 @@
             });
         }
 
-        // Switch to Login
         if (showLoginLink) {
             showLoginLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -479,7 +382,6 @@
             });
         }
 
-        // Login Form Submission
         const loginForm = document.querySelector('.login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', async (e) => {
@@ -498,21 +400,18 @@
                     if (response.ok) {
                         alert('Login exitoso: ' + data.user.username);
                         closeAllModals();
-                        // Save to localStorage
                         localStorage.setItem('forolaliga_user', JSON.stringify(data.user));
-                        // Update UI to show logged in state
                         updateLoginUI(data.user);
                     } else {
                         alert('Error: ' + data.error);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexiÃ³n con el servidor');
+                    alert('Error de conexión con el servidor');
                 }
             });
         }
 
-        // Register Form Submission
         const registerForm = document.querySelector('.register-form');
         if (registerForm) {
             registerForm.addEventListener('submit', async (e) => {
@@ -523,7 +422,7 @@
                 const favoriteTeam = document.getElementById('reg-team-value').value;
 
                 if (password !== confirmPassword) {
-                    alert('Las contraseÃ±as no coinciden');
+                    alert('Las contraseñas no coinciden');
                     return;
                 }
 
@@ -536,8 +435,7 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Registro exitoso! Ahora puedes iniciar sesiÃ³n.');
-                        // Switch to login
+                        alert('Registro exitoso! Ahora puedes iniciar sesión.');
                         registerModal.classList.add('hidden');
                         loginModal.classList.remove('hidden');
                     } else {
@@ -545,10 +443,57 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexiÃ³n con el servidor');
+                    alert('Error de conexión con el servidor');
                 }
             });
         }
+    }
+
+    // --- HELPER FUNCTIONS ---
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderContentWithGifs(content, cssClass = 'topic-gif') {
+        if (!content) return '';
+        let safeContent = escapeHtml(content);
+        safeContent = safeContent.replace(/\[GIF\](.*?)\[\/GIF\]/g, (match, url) => {
+            return `<img src="${url}" class="${cssClass}" alt="GIF">`;
+        });
+        return safeContent;
+    }
+
+    function getCleanExcerpt(content, maxLength) {
+        if (!content) return '';
+        const cleanContent = content.replace(/\[GIF\].*?\[\/GIF\]/g, '').trim();
+        return escapeHtml(cleanContent.substring(0, maxLength));
+    }
+
+    function getAvatarHtml(username, favoriteTeam, sizeClass = '') {
+        if (favoriteTeam) {
+            const team = allTeams.find(t => t.name === favoriteTeam);
+            if (team) {
+                return `<div class="user-avatar ${sizeClass}" title="${favoriteTeam}">
+                    <img src="${team.logo}" alt="${favoriteTeam}" class="avatar-team-logo">
+                </div>`;
+            }
+        }
+        const initial = username ? username.charAt(0).toUpperCase() : '?';
+        return `<div class="user-avatar ${sizeClass}">${initial}</div>`;
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'hace un momento';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `hace ${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `hace ${hours}h`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `hace ${days}d`;
+        return date.toLocaleDateString('es-ES');
     }
 
     // --- TOPICS LOGIC ---
@@ -557,10 +502,6 @@
     const topicModal = document.getElementById('topic-modal');
     const topicForm = document.getElementById('topic-form');
 
-    // Setup topic team dropdown
-    setupDropdown('topic-team-select', allTeams, 'topic-team-value');
-
-    // Load topics on page load
     async function loadTopics() {
         if (!topicsContainer) return;
 
@@ -572,7 +513,7 @@
                 topicsContainer.innerHTML = `
                     <div class="empty-topics">
                         <i class="fa-solid fa-comments"></i>
-                        <p>No hay temas todavÃ­a. Â¡SÃ© el primero en crear uno!</p>
+                        <p>No hay temas todavía. ¡Sé el primero en crear uno!</p>
                     </div>
                 `;
                 return;
@@ -607,7 +548,6 @@
             'general': 'General'
         }[topic.category] || topic.category;
 
-        // Find team logo if team is specified for the topic
         let teamBadge = '';
         if (topic.team) {
             const team = allTeams.find(t => t.name === topic.team);
@@ -618,8 +558,8 @@
             }
         }
 
-        // Get avatar based on author's favorite team
         const avatarHtml = getAvatarHtml(topic.username, topic.author_favorite_team);
+        const hasGif = topic.content && topic.content.includes('[GIF]');
 
         card.innerHTML = `
             <div class="topic-header">
@@ -627,12 +567,12 @@
                 <div class="topic-meta">
                     <span class="tag tag-${topic.category}">${categoryLabel}</span>
                     ${topic.team ? `<span class="team-tag">${topic.team}</span>` : ''}
-                    <span class="time">Â· ${timeAgo}</span>
+                    <span class="time">· ${timeAgo}</span>
                 </div>
                 ${teamBadge}
             </div>
             <h3 class="topic-title">${escapeHtml(topic.title)}</h3>
-            <p class="topic-excerpt">${getCleanExcerpt(topic.content, 150)}${topic.content.replace(/\[GIF\].*?\[\/GIF\]/g, '').length > 150 ? '...' : ''}${topic.content.includes('[GIF]') ? ' <i class="fa-solid fa-image" title="Contiene GIF"></i>' : ''}</p>
+            <p class="topic-excerpt">${getCleanExcerpt(topic.content, 150)}${hasGif ? ' <i class="fa-solid fa-image" title="Contiene GIF"></i>' : ''}</p>
             <div class="topic-footer">
                 <div class="topic-stats">
                     <span class="stat"><i class="fa-regular fa-comment"></i> ${topic.replies || 0}</span>
@@ -642,102 +582,38 @@
             </div>
         `;
 
-        // Make card clickable to open topic detail
         card.addEventListener('click', () => openTopicDetail(topic.id));
-
         return card;
     }
 
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        if (seconds < 60) return 'hace un momento';
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `hace ${minutes}m`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `hace ${hours}h`;
-        const days = Math.floor(hours / 24);
-        if (days < 7) return `hace ${days}d`;
-        return date.toLocaleDateString('es-ES');
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Helper function to render content with GIFs
-    function renderContentWithGifs(content, cssClass = 'topic-gif') {
-        if (!content) return '';
-        // First escape HTML
-        let safeContent = escapeHtml(content);
-        // Then replace [GIF] tags with actual images
-        safeContent = safeContent.replace(/\[GIF\](.*?)\[\/GIF\]/g, (match, url) => {
-            return `<img src="${url}" class="${cssClass}" alt="GIF">`;
-        });
-        return safeContent;
-    }
-
-    // Helper function to get clean excerpt without GIF tags
-    function getCleanExcerpt(content, maxLength) {
-        if (!content) return '';
-        // Remove [GIF] tags and their content
-        const cleanContent = content.replace(/\[GIF\].*?\[\/GIF\]/g, '').trim();
-        // Escape HTML and truncate
-        return escapeHtml(cleanContent.substring(0, maxLength));
-    }
-
-    // Helper function to get user avatar (team logo or initial)
-    function getAvatarHtml(username, favoriteTeam, sizeClass = '') {
-        if (favoriteTeam) {
-            const team = allTeams.find(t => t.name === favoriteTeam);
-            if (team) {
-                return `<div class="user-avatar ${sizeClass}" title="${favoriteTeam}">
-                    <img src="${team.logo}" alt="${favoriteTeam}" class="avatar-team-logo">
-                </div>`;
-            }
-        }
-        // Fallback to initial
-        const initial = username ? username.charAt(0).toUpperCase() : '?';
-        return `<div class="user-avatar ${sizeClass}">${initial}</div>`;
-    }
-
-    // New Topic Button
     if (newTopicBtn && topicModal) {
         newTopicBtn.addEventListener('click', () => {
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesiÃ³n para crear un tema');
+                alert('Debes iniciar sesión para crear un tema');
                 loginModal.classList.remove('hidden');
                 return;
             }
             topicModal.classList.remove('hidden');
         });
 
-        // Close topic modal
         const topicCloseBtn = topicModal.querySelector('.close-modal');
         if (topicCloseBtn) {
-            topicCloseBtn.addEventListener('click', () => {
-                topicModal.classList.add('hidden');
-            });
+            topicCloseBtn.addEventListener('click', () => topicModal.classList.add('hidden'));
         }
 
-        // Close on backdrop click
         topicModal.addEventListener('click', (e) => {
-            if (e.target === topicModal) {
-                topicModal.classList.add('hidden');
-            }
+            if (e.target === topicModal) topicModal.classList.add('hidden');
         });
     }
 
-    // Topic Form Submission
     if (topicForm) {
         topicForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesiÃ³n para crear un tema');
+                alert('Debes iniciar sesión para crear un tema');
                 return;
             }
 
@@ -747,7 +623,6 @@
             const category = document.getElementById('topic-category').value;
             const team = document.getElementById('topic-team-value').value || null;
 
-            // Add GIF to content if selected
             const gifUrl = document.getElementById('topic-gif-url')?.value;
             if (gifUrl) {
                 content += `\n[GIF]${gifUrl}[/GIF]`;
@@ -762,45 +637,36 @@
                 const response = await fetch('/api/topics', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title,
-                        content,
-                        category,
-                        team,
-                        username: user.username
-                    })
+                    body: JSON.stringify({ title, content, category, team, username: user.username })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('Â¡Tema creado exitosamente!');
+                    alert('¡Tema creado exitosamente!');
                     topicModal.classList.add('hidden');
                     topicForm.reset();
-                    // Reset team dropdown
                     const teamSpan = document.querySelector('#topic-team-select .selected-option');
                     if (teamSpan) teamSpan.textContent = 'Seleccionar equipo';
                     document.getElementById('topic-team-value').value = '';
-                    // Reset GIF preview
                     const gifPreview = document.getElementById('topic-gif-preview');
                     if (gifPreview) gifPreview.classList.add('hidden');
                     const gifImg = document.getElementById('topic-gif-img');
                     if (gifImg) gifImg.src = '';
                     const gifUrlInput = document.getElementById('topic-gif-url');
                     if (gifUrlInput) gifUrlInput.value = '';
-                    // Reload topics
                     loadTopics();
                 } else {
                     alert('Error: ' + data.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexiÃ³n con el servidor');
+                alert('Error de conexión con el servidor');
             }
         });
     }
 
-    // --- TOPIC DETAIL & REPLIES LOGIC ---
+    // --- TOPIC DETAIL & REPLIES ---
     const topicDetailModal = document.getElementById('topic-detail-modal');
     const topicDetailContent = document.getElementById('topic-detail-content');
     const repliesContainer = document.getElementById('replies-container');
@@ -813,11 +679,9 @@
         currentTopicId = topicId;
 
         try {
-            // Fetch topic details
             const topicResponse = await fetch(`/api/topics/${topicId}`);
             const topic = await topicResponse.json();
 
-            // Find team logo
             let teamBadge = '';
             if (topic.team) {
                 const team = allTeams.find(t => t.name === topic.team);
@@ -851,10 +715,8 @@
                 </div>
             `;
 
-            // Load replies
             await loadReplies(topicId);
 
-            // Show/hide reply form based on login status
             const savedUser = localStorage.getItem('forolaliga_user');
             if (savedUser) {
                 replyForm.classList.remove('hidden');
@@ -877,7 +739,7 @@
             const replies = await response.json();
 
             if (replies.length === 0) {
-                repliesContainer.innerHTML = '<p class="no-replies">No hay respuestas todavÃ­a. Â¡SÃ© el primero en responder!</p>';
+                repliesContainer.innerHTML = '<p class="no-replies">No hay respuestas todavía. ¡Sé el primero en responder!</p>';
                 return;
             }
 
@@ -885,8 +747,6 @@
             replies.forEach(reply => {
                 const replyDiv = document.createElement('div');
                 replyDiv.className = 'reply-item';
-
-                // Use avatar with team logo
                 const avatarHtml = getAvatarHtml(reply.username, reply.favorite_team, 'user-avatar-sm');
 
                 replyDiv.innerHTML = `
@@ -905,21 +765,19 @@
         }
     }
 
-    // Reply form submission
     if (replyForm) {
         replyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesiÃ³n para responder');
+                alert('Debes iniciar sesión para responder');
                 return;
             }
 
             const user = JSON.parse(savedUser);
             let content = document.getElementById('reply-content').value.trim();
 
-            // Add GIF to content if selected
             const replyGifUrlInput = document.getElementById('reply-gif-url');
             if (replyGifUrlInput && replyGifUrlInput.value) {
                 content += `\n[GIF]${replyGifUrlInput.value}[/GIF]`;
@@ -934,23 +792,17 @@
                 const response = await fetch('/api/replies', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topicId: currentTopicId,
-                        username: user.username,
-                        content
-                    })
+                    body: JSON.stringify({ topicId: currentTopicId, username: user.username, content })
                 });
 
                 if (response.ok) {
                     document.getElementById('reply-content').value = '';
-                    // Reset GIF preview
                     const gifPreview = document.getElementById('reply-gif-preview');
                     if (gifPreview) gifPreview.classList.add('hidden');
                     const gifImg = document.getElementById('reply-gif-img');
                     if (gifImg) gifImg.src = '';
                     if (replyGifUrlInput) replyGifUrlInput.value = '';
                     await loadReplies(currentTopicId);
-                    // Also reload topics to update reply count
                     loadTopics();
                 } else {
                     const data = await response.json();
@@ -958,262 +810,212 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexiÃ³n con el servidor');
+                alert('Error de conexión con el servidor');
             }
         });
     }
 
-    // Close topic detail modal
     if (topicDetailModal) {
         const closeBtn = topicDetailModal.querySelector('.close-modal');
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                topicDetailModal.classList.add('hidden');
-            });
+            closeBtn.addEventListener('click', () => topicDetailModal.classList.add('hidden'));
+        }
+        topicDetailModal.addEventListener('click', (e) => {
+            if (e.target === topicDetailModal) topicDetailModal.classList.add('hidden');
+        });
+    }
+
+    loadTopics();
+
+    // --- GIF PICKER ---
+    const GIPHY_API_KEY = 'tHbQhZgGFhTmRQMdOKK7z4HKPb096ssJ';
+    const GIPHY_API_URL = 'https://api.giphy.com/v1/gifs';
+
+    let currentGifTarget = null;
+
+    const gifModal = document.getElementById('gif-modal');
+    const gifSearchInput = document.getElementById('gif-search-input');
+    const gifSearchBtn = document.getElementById('gif-search-btn');
+    const gifResults = document.getElementById('gif-results');
+    const gifCategoryBtns = document.querySelectorAll('.gif-category-btn');
+
+    const topicGifBtn = document.getElementById('topic-gif-btn');
+    const replyGifBtn = document.getElementById('reply-gif-btn');
+    const chatGifBtn = document.getElementById('chat-gif-btn');
+
+    const topicGifPreview = document.getElementById('topic-gif-preview');
+    const topicGifImg = document.getElementById('topic-gif-img');
+    const topicGifUrl = document.getElementById('topic-gif-url');
+    const topicGifRemove = document.getElementById('topic-gif-remove');
+
+    const replyGifPreview = document.getElementById('reply-gif-preview');
+    const replyGifImg = document.getElementById('reply-gif-img');
+    const replyGifUrl = document.getElementById('reply-gif-url');
+    const replyGifRemove = document.getElementById('reply-gif-remove');
+
+    function openGifModal(target) {
+        currentGifTarget = target;
+        if (gifModal) {
+            gifModal.classList.remove('hidden');
+            loadTrendingGifs();
+            if (gifSearchInput) gifSearchInput.focus();
+        }
+    }
+
+    function closeGifModal() {
+        if (gifModal) gifModal.classList.add('hidden');
+        currentGifTarget = null;
+    }
+
+    async function loadTrendingGifs() {
+        showGifLoading();
+        try {
+            const response = await fetch(`${GIPHY_API_URL}/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`);
+            const data = await response.json();
+            displayGifs(data.data);
+        } catch (error) {
+            console.error('Error loading GIFs:', error);
+            if (gifResults) gifResults.innerHTML = '<p class="gif-loading">Error al cargar GIFs</p>';
+        }
+    }
+
+    async function searchGifs(query) {
+        if (!query.trim()) {
+            loadTrendingGifs();
+            return;
+        }
+        showGifLoading();
+        try {
+            const response = await fetch(`${GIPHY_API_URL}/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`);
+            const data = await response.json();
+            displayGifs(data.data);
+        } catch (error) {
+            console.error('Error searching GIFs:', error);
+            if (gifResults) gifResults.innerHTML = '<p class="gif-loading">Error al buscar GIFs</p>';
+        }
+    }
+
+    function showGifLoading() {
+        if (gifResults) {
+            gifResults.innerHTML = '<div class="gif-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando GIFs...</div>';
+        }
+    }
+
+    function displayGifs(gifs) {
+        if (!gifResults) return;
+
+        if (gifs.length === 0) {
+            gifResults.innerHTML = '<p class="gif-loading">No se encontraron GIFs</p>';
+            return;
         }
 
-        topicDetailModal.addEventListener('click', (e) => {
-            if (e.target === topicDetailModal) {
-                topicDetailModal.classList.add('hidden');
+        gifResults.innerHTML = '';
+        gifs.forEach(gif => {
+            const div = document.createElement('div');
+            div.className = 'gif-item';
+            div.innerHTML = `<img src="${gif.images.fixed_height_small.url}" alt="${gif.title}">`;
+            div.addEventListener('click', () => selectGif(gif.images.fixed_height.url));
+            gifResults.appendChild(div);
+        });
+    }
+
+    function selectGif(gifUrl) {
+        if (currentGifTarget === 'topic') {
+            if (topicGifImg) topicGifImg.src = gifUrl;
+            if (topicGifUrl) topicGifUrl.value = gifUrl;
+            if (topicGifPreview) topicGifPreview.classList.remove('hidden');
+        } else if (currentGifTarget === 'reply') {
+            if (replyGifImg) replyGifImg.src = gifUrl;
+            if (replyGifUrl) replyGifUrl.value = gifUrl;
+            if (replyGifPreview) replyGifPreview.classList.remove('hidden');
+        } else if (currentGifTarget === 'chat') {
+            sendChatGif(gifUrl);
+        }
+        closeGifModal();
+    }
+
+    async function sendChatGif(gifUrl) {
+        const savedUser = localStorage.getItem('forolaliga_user');
+        if (!savedUser || !window.currentRoom) {
+            alert('Entra a una sala de chat primero');
+            return;
+        }
+
+        const user = JSON.parse(savedUser);
+
+        try {
+            const response = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    room: window.currentRoom,
+                    username: user.username,
+                    content: `[GIF]${gifUrl}[/GIF]`
+                })
+            });
+
+            if (response.ok) {
+                window.loadMessages(window.currentRoom);
+            }
+        } catch (error) {
+            console.error('Error sending GIF:', error);
+        }
+    }
+
+    if (topicGifBtn) topicGifBtn.addEventListener('click', () => openGifModal('topic'));
+    if (replyGifBtn) replyGifBtn.addEventListener('click', () => openGifModal('reply'));
+    if (chatGifBtn) chatGifBtn.addEventListener('click', () => openGifModal('chat'));
+
+    if (topicGifRemove) {
+        topicGifRemove.addEventListener('click', () => {
+            if (topicGifPreview) topicGifPreview.classList.add('hidden');
+            if (topicGifImg) topicGifImg.src = '';
+            if (topicGifUrl) topicGifUrl.value = '';
+        });
+    }
+
+    if (replyGifRemove) {
+        replyGifRemove.addEventListener('click', () => {
+            if (replyGifPreview) replyGifPreview.classList.add('hidden');
+            if (replyGifImg) replyGifImg.src = '';
+            if (replyGifUrl) replyGifUrl.value = '';
+        });
+    }
+
+    if (gifSearchBtn) {
+        gifSearchBtn.addEventListener('click', () => {
+            const query = gifSearchInput ? gifSearchInput.value : '';
+            searchGifs(query);
+        });
+    }
+
+    if (gifSearchInput) {
+        gifSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchGifs(gifSearchInput.value);
             }
         });
     }
 
-    // Load topics on page load
-    loadTopics();
-});
-
-// --- GIPHY GIF PICKER ---
-const GIPHY_API_KEY = 'tHbQhZgGFhTmRQMdOKK7z4HKPb096ssJ';
-const GIPHY_API_URL = 'https://api.giphy.com/v1/gifs';
-
-let currentGifTarget = null; // 'topic', 'reply', or 'chat'
-
-// GIF Modal Elements
-const gifModal = document.getElementById('gif-modal');
-const gifSearchInput = document.getElementById('gif-search-input');
-const gifSearchBtn = document.getElementById('gif-search-btn');
-const gifResults = document.getElementById('gif-results');
-const gifCategoryBtns = document.querySelectorAll('.gif-category-btn');
-
-// GIF Button Handlers
-const topicGifBtn = document.getElementById('topic-gif-btn');
-const replyGifBtn = document.getElementById('reply-gif-btn');
-const chatGifBtn = document.getElementById('chat-gif-btn');
-
-// GIF Preview Elements
-const topicGifPreview = document.getElementById('topic-gif-preview');
-const topicGifImg = document.getElementById('topic-gif-img');
-const topicGifUrl = document.getElementById('topic-gif-url');
-const topicGifRemove = document.getElementById('topic-gif-remove');
-
-const replyGifPreview = document.getElementById('reply-gif-preview');
-const replyGifImg = document.getElementById('reply-gif-img');
-const replyGifUrl = document.getElementById('reply-gif-url');
-const replyGifRemove = document.getElementById('reply-gif-remove');
-
-// Open GIF Modal
-function openGifModal(target) {
-    currentGifTarget = target;
-    if (gifModal) {
-        gifModal.classList.remove('hidden');
-        loadTrendingGifs();
-        if (gifSearchInput) gifSearchInput.focus();
-    }
-}
-
-// Close GIF Modal
-function closeGifModal() {
-    if (gifModal) {
-        gifModal.classList.add('hidden');
-    }
-    currentGifTarget = null;
-}
-
-// Load Trending GIFs
-async function loadTrendingGifs() {
-    showGifLoading();
-    try {
-        const response = await fetch(`${GIPHY_API_URL}/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`);
-        const data = await response.json();
-        displayGifs(data.data);
-    } catch (error) {
-        console.error('Error loading GIFs:', error);
-        gifResults.innerHTML = '<p class=\"gif-loading\">Error al cargar GIFs</p>';
-    }
-}
-
-// Search GIFs
-async function searchGifs(query) {
-    if (!query.trim()) {
-        loadTrendingGifs();
-        return;
-    }
-    showGifLoading();
-    try {
-        const response = await fetch(`${GIPHY_API_URL}/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`);
-        const data = await response.json();
-        displayGifs(data.data);
-    } catch (error) {
-        console.error('Error searching GIFs:', error);
-        gifResults.innerHTML = '<p class=\"gif-loading\">Error al buscar GIFs</p>';
-    }
-}
-
-// Show Loading State
-function showGifLoading() {
-    if (gifResults) {
-        gifResults.innerHTML = '<div class=\"gif-loading\"><i class=\"fa-solid fa-spinner fa-spin\"></i> Cargando GIFs...</div>';
-    }
-}
-
-// Display GIFs
-function displayGifs(gifs) {
-    if (!gifResults) return;
-
-    if (gifs.length === 0) {
-        gifResults.innerHTML = '<p class=\"gif-loading\">No se encontraron GIFs</p>';
-        return;
-    }
-
-    gifResults.innerHTML = '';
-    gifs.forEach(gif => {
-        const div = document.createElement('div');
-        div.className = 'gif-item';
-        div.innerHTML = `<img src="${gif.images.fixed_height_small.url}" alt="${gif.title}" data-full="${gif.images.fixed_height.url}">`;
-        div.addEventListener('click', () => selectGif(gif.images.fixed_height.url));
-        gifResults.appendChild(div);
-    });
-}
-
-// Select a GIF
-function selectGif(gifUrl) {
-    if (currentGifTarget === 'topic') {
-        if (topicGifImg) topicGifImg.src = gifUrl;
-        if (topicGifUrl) topicGifUrl.value = gifUrl;
-        if (topicGifPreview) topicGifPreview.classList.remove('hidden');
-    } else if (currentGifTarget === 'reply') {
-        if (replyGifImg) replyGifImg.src = gifUrl;
-        if (replyGifUrl) replyGifUrl.value = gifUrl;
-        if (replyGifPreview) replyGifPreview.classList.remove('hidden');
-    } else if (currentGifTarget === 'chat') {
-        // For chat, send the GIF directly as a message
-        sendChatGif(gifUrl);
-    }
-    closeGifModal();
-}
-
-// Send Chat GIF
-async function sendChatGif(gifUrl) {
-    const savedUser = localStorage.getItem('forolaliga_user');
-    if (!savedUser || !window.currentRoom) return;
-
-    const user = JSON.parse(savedUser);
-
-    try {
-        const response = await fetch('/api/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                room: window.currentRoom,
-                username: user.username,
-                content: `[GIF]${gifUrl}[/GIF]`
-            })
+    gifCategoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            gifCategoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const category = btn.getAttribute('data-category');
+            if (category === 'trending') {
+                loadTrendingGifs();
+            } else {
+                searchGifs(category);
+            }
         });
+    });
 
-        if (response.ok) {
-            // Reload messages to show the GIF
-            window.loadMessages(window.currentRoom);
-        }
-    } catch (error) {
-        console.error('Error sending GIF:', error);
+    if (gifModal) {
+        const closeBtn = gifModal.querySelector('.close-modal');
+        if (closeBtn) closeBtn.addEventListener('click', closeGifModal);
+        gifModal.addEventListener('click', (e) => {
+            if (e.target === gifModal) closeGifModal();
+        });
     }
-}
-
-// Event Listeners for GIF Buttons
-if (topicGifBtn) {
-    topicGifBtn.addEventListener('click', () => openGifModal('topic'));
-}
-
-if (replyGifBtn) {
-    replyGifBtn.addEventListener('click', () => openGifModal('reply'));
-}
-
-if (chatGifBtn) {
-    chatGifBtn.addEventListener('click', () => openGifModal('chat'));
-}
-
-// Remove GIF Buttons
-if (topicGifRemove) {
-    topicGifRemove.addEventListener('click', () => {
-        if (topicGifPreview) topicGifPreview.classList.add('hidden');
-        if (topicGifImg) topicGifImg.src = '';
-        if (topicGifUrl) topicGifUrl.value = '';
-    });
-}
-
-if (replyGifRemove) {
-    replyGifRemove.addEventListener('click', () => {
-        if (replyGifPreview) replyGifPreview.classList.add('hidden');
-        if (replyGifImg) replyGifImg.src = '';
-        if (replyGifUrl) replyGifUrl.value = '';
-    });
-}
-
-// Search Button
-if (gifSearchBtn) {
-    gifSearchBtn.addEventListener('click', () => {
-        const query = gifSearchInput ? gifSearchInput.value : '';
-        searchGifs(query);
-    });
-}
-
-// Search on Enter
-if (gifSearchInput) {
-    gifSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchGifs(gifSearchInput.value);
-        }
-    });
-}
-
-// Category Buttons
-gifCategoryBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Update active state
-        gifCategoryBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const category = btn.getAttribute('data-category');
-        if (category === 'trending') {
-            loadTrendingGifs();
-        } else {
-            searchGifs(category);
-        }
-    });
 });
-
-// Close GIF Modal
-if (gifModal) {
-    const closeBtn = gifModal.querySelector('.close-modal');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeGifModal);
-    }
-
-    gifModal.addEventListener('click', (e) => {
-        if (e.target === gifModal) {
-            closeGifModal();
-        }
-    });
-}
-
-// Helper to parse GIF from content
-function parseGifFromContent(content) {
-    const gifMatch = content.match(/\[GIF\](.*?)\[\/GIF\]/);
-    if (gifMatch) {
-        const textContent = content.replace(/\[GIF\].*?\[\/GIF\]/g, '').trim();
-        return { gifUrl: gifMatch[1], textContent };
-    }
-    return { gifUrl: null, textContent: content };
-}
