@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${!isSent ? avatarHtml : ''}
                         <div class="message-bubble">
                             <span class="message-author">@${msg.username}</span>
-                            <span class="message-text">${escapeHtml(msg.content)}</span>
+                            <span class="message-text">${renderContentWithGifs(msg.content, 'message-gif')}</span>
                         </div>
                         ${isSent ? avatarHtml : ''}
                     </div>
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${!isSent ? avatarHtml : ''}
                                 <div class="message-bubble">
                                     <span class="message-author">@${msg.username}</span>
-                                    <span class="message-text">${escapeHtml(msg.content)}</span>
+                                    <span class="message-text">${renderContentWithGifs(msg.content, 'message-gif')}</span>
                                 </div>
                                 ${isSent ? avatarHtml : ''}
                             </div>
@@ -666,6 +666,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return div.innerHTML;
     }
 
+    // Helper function to render content with GIFs
+    function renderContentWithGifs(content, cssClass = 'topic-gif') {
+        if (!content) return '';
+        // First escape HTML
+        let safeContent = escapeHtml(content);
+        // Then replace [GIF] tags with actual images
+        safeContent = safeContent.replace(/\[GIF\](.*?)\[\/GIF\]/g, (match, url) => {
+            return `<img src="${url}" class="${cssClass}" alt="GIF">`;
+        });
+        return safeContent;
+    }
+
     // Helper function to get user avatar (team logo or initial)
     function getAvatarHtml(username, favoriteTeam, sizeClass = '') {
         if (favoriteTeam) {
@@ -722,9 +734,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const user = JSON.parse(savedUser);
             const title = document.getElementById('topic-title').value.trim();
-            const content = document.getElementById('topic-content').value.trim();
+            let content = document.getElementById('topic-content').value.trim();
             const category = document.getElementById('topic-category').value;
             const team = document.getElementById('topic-team-value').value || null;
+
+            // Add GIF to content if selected
+            const gifUrl = document.getElementById('topic-gif-url')?.value;
+            if (gifUrl) {
+                content += `\n[GIF]${gifUrl}[/GIF]`;
+            }
 
             if (!title || !content || !category) {
                 alert('Por favor completa todos los campos requeridos');
@@ -754,6 +772,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const teamSpan = document.querySelector('#topic-team-select .selected-option');
                     if (teamSpan) teamSpan.textContent = 'Seleccionar equipo';
                     document.getElementById('topic-team-value').value = '';
+                    // Reset GIF preview
+                    const gifPreview = document.getElementById('topic-gif-preview');
+                    if (gifPreview) gifPreview.classList.add('hidden');
+                    const gifImg = document.getElementById('topic-gif-img');
+                    if (gifImg) gifImg.src = '';
+                    const gifUrlInput = document.getElementById('topic-gif-url');
+                    if (gifUrlInput) gifUrlInput.value = '';
                     // Reload topics
                     loadTopics();
                 } else {
@@ -810,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <h2 class="topic-detail-title">${escapeHtml(topic.title)}</h2>
-                <div class="topic-detail-body">${escapeHtml(topic.content)}</div>
+                <div class="topic-detail-body">${renderContentWithGifs(topic.content, 'topic-gif')}</div>
                 <div class="topic-detail-stats">
                     <span><i class="fa-regular fa-eye"></i> ${topic.views} visualizaciones</span>
                     <span><i class="fa-regular fa-comment"></i> ${topic.replies} respuestas</span>
@@ -861,7 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="reply-username">@${escapeHtml(reply.username)}</span>
                         <span class="reply-time">${getTimeAgo(new Date(reply.created_at))}</span>
                     </div>
-                    <div class="reply-content">${escapeHtml(reply.content)}</div>
+                    <div class="reply-content">${renderContentWithGifs(reply.content, 'reply-gif')}</div>
                 `;
                 repliesContainer.appendChild(replyDiv);
             });
@@ -883,7 +908,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const user = JSON.parse(savedUser);
-            const content = document.getElementById('reply-content').value.trim();
+            let content = document.getElementById('reply-content').value.trim();
+
+            // Add GIF to content if selected
+            const replyGifUrlInput = document.getElementById('reply-gif-url');
+            if (replyGifUrlInput && replyGifUrlInput.value) {
+                content += `\n[GIF]${replyGifUrlInput.value}[/GIF]`;
+            }
 
             if (!content) {
                 alert('Escribe una respuesta');
@@ -903,6 +934,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     document.getElementById('reply-content').value = '';
+                    // Reset GIF preview
+                    const gifPreview = document.getElementById('reply-gif-preview');
+                    if (gifPreview) gifPreview.classList.add('hidden');
+                    const gifImg = document.getElementById('reply-gif-img');
+                    if (gifImg) gifImg.src = '';
+                    if (replyGifUrlInput) replyGifUrlInput.value = '';
                     await loadReplies(currentTopicId);
                     // Also reload topics to update reply count
                     loadTopics();
