@@ -161,6 +161,16 @@
     const sendBtn = document.getElementById('send-btn');
     const chatInputContainer = document.getElementById('chat-input-container');
 
+    // Mobile rooms toggle
+    const roomsToggleBtn = document.getElementById('rooms-toggle-btn');
+    const chatSidebar = document.querySelector('.chat-sidebar');
+
+    if (roomsToggleBtn && chatSidebar) {
+        roomsToggleBtn.addEventListener('click', () => {
+            chatSidebar.classList.toggle('mobile-open');
+        });
+    }
+
     // Global variables for GIF picker access
     window.currentRoom = null;
 
