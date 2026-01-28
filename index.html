@@ -148,6 +148,9 @@
                 </div>
 
                 <div class="chat-input-area hidden" id="chat-input-container">
+                    <button type="button" class="btn-gif" id="chat-gif-btn" title="Añadir GIF">
+                        <i class="fa-solid fa-image"></i>
+                    </button>
                     <input type="text" placeholder="Escribe un mensaje..." id="message-input">
                     <button class="btn btn-primary" id="send-btn">
                         <i class="fa-solid fa-paper-plane"></i>
@@ -259,6 +262,18 @@
                     <label for="topic-content">Contenido</label>
                     <textarea id="topic-content" placeholder="Escribe el contenido de tu tema..." rows="6"
                         required></textarea>
+                    <div class="gif-toolbar">
+                        <button type="button" class="btn-gif" id="topic-gif-btn" title="Añadir GIF">
+                            <i class="fa-solid fa-image"></i> GIF
+                        </button>
+                    </div>
+                    <div id="topic-gif-preview" class="gif-preview hidden">
+                        <img id="topic-gif-img" src="" alt="GIF seleccionado">
+                        <button type="button" class="btn-gif-remove" id="topic-gif-remove">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <input type="hidden" id="topic-gif-url" name="gifUrl">
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Publicar Tema</button>
             </form>
@@ -280,6 +295,18 @@
                 <form id="reply-form" class="reply-form hidden">
                     <div class="form-group">
                         <textarea id="reply-content" placeholder="Escribe tu respuesta..." rows="3" required></textarea>
+                        <div class="gif-toolbar">
+                            <button type="button" class="btn-gif" id="reply-gif-btn" title="Añadir GIF">
+                                <i class="fa-solid fa-image"></i> GIF
+                            </button>
+                        </div>
+                        <div id="reply-gif-preview" class="gif-preview hidden">
+                            <img id="reply-gif-img" src="" alt="GIF seleccionado">
+                            <button type="button" class="btn-gif-remove" id="reply-gif-remove">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        <input type="hidden" id="reply-gif-url" name="gifUrl">
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fa-solid fa-reply"></i> Responder
@@ -288,6 +315,34 @@
                 <p class="login-to-reply hidden" id="login-to-reply">
                     <i class="fa-solid fa-lock"></i> Inicia sesión para responder
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GIF PICKER MODAL -->
+    <div id="gif-modal" class="modal hidden">
+        <div class="modal-content modal-wide">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fa-solid fa-image"></i> Buscar GIF</h2>
+            <div class="gif-search-container">
+                <input type="text" id="gif-search-input" class="gif-search-input" placeholder="Buscar GIFs...">
+                <button type="button" class="btn btn-primary" id="gif-search-btn">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </div>
+            <div class="gif-categories">
+                <button type="button" class="gif-category-btn active" data-category="trending">🔥 Trending</button>
+                <button type="button" class="gif-category-btn" data-category="football">⚽ Fútbol</button>
+                <button type="button" class="gif-category-btn" data-category="celebration">🎉 Celebración</button>
+                <button type="button" class="gif-category-btn" data-category="reaction">😂 Reacciones</button>
+            </div>
+            <div id="gif-results" class="gif-results">
+                <div class="gif-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando GIFs...
+                </div>
+            </div>
+            <div class="gif-powered-by">
+                Powered by <img src="https://giphy.com/static/img/giphy-logo.png" alt="GIPHY" height="16">
             </div>
         </div>
     </div>

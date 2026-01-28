@@ -936,3 +936,238 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load topics on page load
     loadTopics();
 });
+
+// --- GIPHY GIF PICKER ---
+const GIPHY_API_KEY = 'tHbQhZgGFhTmRQMdOKK7z4HKPb096ssJ';
+const GIPHY_API_URL = 'https://api.giphy.com/v1/gifs';
+
+let currentGifTarget = null; // 'topic', 'reply', or 'chat'
+
+// GIF Modal Elements
+const gifModal = document.getElementById('gif-modal');
+const gifSearchInput = document.getElementById('gif-search-input');
+const gifSearchBtn = document.getElementById('gif-search-btn');
+const gifResults = document.getElementById('gif-results');
+const gifCategoryBtns = document.querySelectorAll('.gif-category-btn');
+
+// GIF Button Handlers
+const topicGifBtn = document.getElementById('topic-gif-btn');
+const replyGifBtn = document.getElementById('reply-gif-btn');
+const chatGifBtn = document.getElementById('chat-gif-btn');
+
+// GIF Preview Elements
+const topicGifPreview = document.getElementById('topic-gif-preview');
+const topicGifImg = document.getElementById('topic-gif-img');
+const topicGifUrl = document.getElementById('topic-gif-url');
+const topicGifRemove = document.getElementById('topic-gif-remove');
+
+const replyGifPreview = document.getElementById('reply-gif-preview');
+const replyGifImg = document.getElementById('reply-gif-img');
+const replyGifUrl = document.getElementById('reply-gif-url');
+const replyGifRemove = document.getElementById('reply-gif-remove');
+
+// Open GIF Modal
+function openGifModal(target) {
+    currentGifTarget = target;
+    if (gifModal) {
+        gifModal.classList.remove('hidden');
+        loadTrendingGifs();
+        if (gifSearchInput) gifSearchInput.focus();
+    }
+}
+
+// Close GIF Modal
+function closeGifModal() {
+    if (gifModal) {
+        gifModal.classList.add('hidden');
+    }
+    currentGifTarget = null;
+}
+
+// Load Trending GIFs
+async function loadTrendingGifs() {
+    showGifLoading();
+    try {
+        const response = await fetch(`${GIPHY_API_URL}/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`);
+        const data = await response.json();
+        displayGifs(data.data);
+    } catch (error) {
+        console.error('Error loading GIFs:', error);
+        gifResults.innerHTML = '<p class=\"gif-loading\">Error al cargar GIFs</p>';
+    }
+}
+
+// Search GIFs
+async function searchGifs(query) {
+    if (!query.trim()) {
+        loadTrendingGifs();
+        return;
+    }
+    showGifLoading();
+    try {
+        const response = await fetch(`${GIPHY_API_URL}/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`);
+        const data = await response.json();
+        displayGifs(data.data);
+    } catch (error) {
+        console.error('Error searching GIFs:', error);
+        gifResults.innerHTML = '<p class=\"gif-loading\">Error al buscar GIFs</p>';
+    }
+}
+
+// Show Loading State
+function showGifLoading() {
+    if (gifResults) {
+        gifResults.innerHTML = '<div class=\"gif-loading\"><i class=\"fa-solid fa-spinner fa-spin\"></i> Cargando GIFs...</div>';
+    }
+}
+
+// Display GIFs
+function displayGifs(gifs) {
+    if (!gifResults) return;
+
+    if (gifs.length === 0) {
+        gifResults.innerHTML = '<p class=\"gif-loading\">No se encontraron GIFs</p>';
+        return;
+    }
+
+    gifResults.innerHTML = '';
+    gifs.forEach(gif => {
+        const div = document.createElement('div');
+        div.className = 'gif-item';
+        div.innerHTML = `<img src="${gif.images.fixed_height_small.url}" alt="${gif.title}" data-full="${gif.images.fixed_height.url}">`;
+        div.addEventListener('click', () => selectGif(gif.images.fixed_height.url));
+        gifResults.appendChild(div);
+    });
+}
+
+// Select a GIF
+function selectGif(gifUrl) {
+    if (currentGifTarget === 'topic') {
+        if (topicGifImg) topicGifImg.src = gifUrl;
+        if (topicGifUrl) topicGifUrl.value = gifUrl;
+        if (topicGifPreview) topicGifPreview.classList.remove('hidden');
+    } else if (currentGifTarget === 'reply') {
+        if (replyGifImg) replyGifImg.src = gifUrl;
+        if (replyGifUrl) replyGifUrl.value = gifUrl;
+        if (replyGifPreview) replyGifPreview.classList.remove('hidden');
+    } else if (currentGifTarget === 'chat') {
+        // For chat, send the GIF directly as a message
+        sendChatGif(gifUrl);
+    }
+    closeGifModal();
+}
+
+// Send Chat GIF
+async function sendChatGif(gifUrl) {
+    const savedUser = localStorage.getItem('forolaliga_user');
+    if (!savedUser || !currentRoom) return;
+
+    const user = JSON.parse(savedUser);
+
+    try {
+        const response = await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room: currentRoom,
+                username: user.username,
+                content: `[GIF]${gifUrl}[/GIF]`
+            })
+        });
+
+        if (response.ok) {
+            // Reload messages to show the GIF
+            loadMessages(currentRoom);
+        }
+    } catch (error) {
+        console.error('Error sending GIF:', error);
+    }
+}
+
+// Event Listeners for GIF Buttons
+if (topicGifBtn) {
+    topicGifBtn.addEventListener('click', () => openGifModal('topic'));
+}
+
+if (replyGifBtn) {
+    replyGifBtn.addEventListener('click', () => openGifModal('reply'));
+}
+
+if (chatGifBtn) {
+    chatGifBtn.addEventListener('click', () => openGifModal('chat'));
+}
+
+// Remove GIF Buttons
+if (topicGifRemove) {
+    topicGifRemove.addEventListener('click', () => {
+        if (topicGifPreview) topicGifPreview.classList.add('hidden');
+        if (topicGifImg) topicGifImg.src = '';
+        if (topicGifUrl) topicGifUrl.value = '';
+    });
+}
+
+if (replyGifRemove) {
+    replyGifRemove.addEventListener('click', () => {
+        if (replyGifPreview) replyGifPreview.classList.add('hidden');
+        if (replyGifImg) replyGifImg.src = '';
+        if (replyGifUrl) replyGifUrl.value = '';
+    });
+}
+
+// Search Button
+if (gifSearchBtn) {
+    gifSearchBtn.addEventListener('click', () => {
+        const query = gifSearchInput ? gifSearchInput.value : '';
+        searchGifs(query);
+    });
+}
+
+// Search on Enter
+if (gifSearchInput) {
+    gifSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchGifs(gifSearchInput.value);
+        }
+    });
+}
+
+// Category Buttons
+gifCategoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Update active state
+        gifCategoryBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const category = btn.getAttribute('data-category');
+        if (category === 'trending') {
+            loadTrendingGifs();
+        } else {
+            searchGifs(category);
+        }
+    });
+});
+
+// Close GIF Modal
+if (gifModal) {
+    const closeBtn = gifModal.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeGifModal);
+    }
+
+    gifModal.addEventListener('click', (e) => {
+        if (e.target === gifModal) {
+            closeGifModal();
+        }
+    });
+}
+
+// Helper to parse GIF from content
+function parseGifFromContent(content) {
+    const gifMatch = content.match(/\[GIF\](.*?)\[\/GIF\]/);
+    if (gifMatch) {
+        const textContent = content.replace(/\[GIF\].*?\[\/GIF\]/g, '').trim();
+        return { gifUrl: gifMatch[1], textContent };
+    }
+    return { gifUrl: null, textContent: content };
+}
