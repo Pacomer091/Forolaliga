@@ -3,12 +3,60 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const db = require('./database');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    socket.on('joinRoom', (room) => {
+        socket.join(room);
+        console.log(`User joined room: ${room}`);
+    });
+
+    socket.on('chatMessage', (msg) => {
+        const { room, username, content } = msg;
+
+        const sql = 'INSERT INTO messages (room, username, content) VALUES (?, ?, ?)';
+        const params = [room, username, content];
+
+        db.run(sql, params, function (err) {
+            if (err) {
+                console.error(err.message);
+                return;
+            }
+
+            // Get favorite team for the user to send back with the message
+            db.get('SELECT favorite_team FROM users WHERE username = ?', [username], (err, row) => {
+                const messageData = {
+                    id: this.lastID,
+                    room,
+                    username,
+                    content,
+                    created_at: new Date().toISOString(),
+                    favorite_team: row ? row.favorite_team : null
+                };
+
+                // Broadcast to everyone in the room
+                io.to(room).emit('message', messageData);
+            });
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
 
 // Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, '.')));
@@ -26,8 +74,10 @@ app.post('/api/register', (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
+    const hashedPassword = bcrypt.hashSync(password, 8);
+
     const sql = 'INSERT INTO users (username, password, favorite_team) VALUES (?, ?, ?)';
-    const params = [username, password, favoriteTeam || null];
+    const params = [username, hashedPassword, favoriteTeam || null];
 
     db.run(sql, params, function (err) {
         if (err) {
@@ -52,8 +102,8 @@ app.post('/api/login', (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
-    const params = [username, password];
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    const params = [username];
 
     db.get(sql, params, (err, row) => {
         if (err) {
@@ -62,6 +112,12 @@ app.post('/api/login', (req, res) => {
         if (!row) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
+
+        const passwordIsValid = bcrypt.compareSync(password, row.password);
+        if (!passwordIsValid) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
         res.json({
             message: 'Login successful',
             user: {
@@ -74,9 +130,18 @@ app.post('/api/login', (req, res) => {
 });
 
 // Send message endpoint
+// Send message endpoint (Legacy - kept for compatibility/fallback if needed, but Socket.io is preferred)
 app.post('/api/messages', (req, res) => {
+    // ... existing logic ...
     const { room, username, content } = req.body;
+    // ...
+    // We can still save via HTTP but we should refrain from using it for real-time
+    // Ideally this endpoint would also emit to socket.io to keep clients in sync if mixed usage occurred
 
+    // For this refactor, we are moving fully to socket.io for sending messages in the frontend
+    // leaving this here just in case, or we can remove it. Let's redirect to socket logic in frontend.
+
+    // Actually, let's keep it but also emit the socket event so HTTP posts also update real-time clients
     if (!room || !username || !content) {
         return res.status(400).json({ error: 'Room, username, and content are required' });
     }
@@ -88,13 +153,21 @@ app.post('/api/messages', (req, res) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        res.json({
-            message: 'Message sent successfully',
-            id: this.lastID,
-            room,
-            username,
-            content,
-            created_at: new Date().toISOString()
+
+        db.get('SELECT favorite_team FROM users WHERE username = ?', [username], (err, row) => {
+            const messageData = {
+                message: 'Message sent successfully',
+                id: this.lastID,
+                room,
+                username,
+                content,
+                created_at: new Date().toISOString(),
+                favorite_team: row ? row.favorite_team : null
+            };
+
+            // Emit to room
+            io.to(room).emit('message', messageData);
+            res.json(messageData);
         });
     });
 });
@@ -153,6 +226,7 @@ app.post('/api/topics', (req, res) => {
 app.get('/api/topics', (req, res) => {
     const category = req.query.category;
     const team = req.query.team;
+    const search = req.query.search;
 
     let sql = `
         SELECT t.*, u.favorite_team as author_favorite_team 
@@ -169,6 +243,10 @@ app.get('/api/topics', (req, res) => {
     if (team) {
         conditions.push('t.team = ?');
         params.push(team);
+    }
+    if (search) {
+        conditions.push('t.title LIKE ?');
+        params.push(`%${search}%`);
     }
 
     if (conditions.length > 0) {
@@ -258,6 +336,6 @@ app.post('/api/replies', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

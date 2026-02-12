@@ -28,7 +28,9 @@
                 <button class="nav-btn" data-target="chat-view">Chat</button>
             </nav>
 
-            <button class="btn btn-primary login-btn">Login</button>
+            <button class="btn btn-primary login-btn btn-plasma" id="login-btn">
+                <i class="fa-solid fa-right-to-bracket"></i> Acceder
+            </button>
         </div>
     </header>
 
@@ -38,7 +40,14 @@
             <section class="feed">
                 <div class="feed-header">
                     <h2>Temas Recientes</h2>
-                    <button class="icon-btn"><i class="fa-solid fa-bars-staggered"></i></button>
+                    <button class="icon-btn btn-plasma" id="reload-topics-btn" title="Recargar Temas">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass search-bar-icon"></i>
+                    <input type="text" id="forum-search-input" placeholder="Buscar temas... (ej: Mbappé)">
                 </div>
 
                 <!-- Topics will be loaded here dynamically -->
@@ -51,14 +60,30 @@
             </section>
 
             <aside class="sidebar">
-                <button class="btn btn-primary btn-full btn-lg" id="new-topic-btn">
+                <button class="btn btn-primary btn-full btn-lg btn-plasma" id="new-topic-btn">
                     <i class="fa-solid fa-plus"></i> Nuevo Tema
+                </button>
+
+                <button class="btn btn-secondary btn-full btn-lg btn-filters-toggle" id="filters-toggle-btn">
+                    <i class="fa-solid fa-filter"></i> Filtros
                 </button>
 
                 <div class="widget filter-widget">
                     <div class="widget-header">
                         <i class="fa-solid fa-filter"></i>
                         <h3>Filtrar por Equipo</h3>
+                        <button class="btn-filters-close" id="filters-close-btn"><i
+                                class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <!-- Favorite Team Shortcut -->
+                    <div id="favorite-team-filter" class="favorite-team-card hidden">
+                        <img src="" alt="Escudo" class="fav-team-logo">
+                        <div class="fav-team-info">
+                            <span class="fav-label">Tu Equipo</span>
+                            <span class="fav-name">Real Madrid</span>
+                        </div>
+                        <i class="fa-solid fa-star fav-icon"></i>
                     </div>
 
                     <div class="filter-group">
@@ -101,6 +126,7 @@
             <aside class="chat-sidebar">
                 <div class="chat-sidebar-header">
                     <h3>Salas de Chat</h3>
+                    <button class="btn-rooms-close" id="rooms-close-btn"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="chat-rooms-list">
                     <div class="chat-category">
@@ -133,7 +159,9 @@
             </aside>
 
             <section class="chat-main">
-                <div class="chat-header"><button class="btn-rooms-toggle" id="rooms-toggle-btn"><i class="fa-solid fa-bars"></i> Salas</button><div class="chat-room-info">
+                <div class="chat-header"><button class="btn-rooms-toggle" id="rooms-toggle-btn"><i
+                            class="fa-solid fa-bars"></i> Salas</button>
+                    <div class="chat-room-info">
                         <h3 id="current-room-name">Seleccionar chat</h3>
                     </div>
                 </div>
@@ -147,11 +175,15 @@
                 </div>
 
                 <div class="chat-input-area hidden" id="chat-input-container">
+                    <div id="emoji-picker" class="emoji-picker hidden"></div>
+                    <button type="button" class="btn-gif" id="chat-emoji-btn" title="Añadir Emoji">
+                        <i class="fa-regular fa-face-smile"></i>
+                    </button>
                     <button type="button" class="btn-gif" id="chat-gif-btn" title="Añadir GIF">
                         <i class="fa-solid fa-image"></i>
                     </button>
                     <input type="text" placeholder="Escribe un mensaje..." id="message-input">
-                    <button class="btn btn-primary" id="send-btn">
+                    <button class="btn btn-primary btn-plasma" id="send-btn">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </div>
@@ -346,6 +378,8 @@
         </div>
     </div>
 
+    <div id="toast-container" class="toast-container"></div>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 

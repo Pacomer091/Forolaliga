@@ -74,8 +74,54 @@
         });
     });
 
+    // --- TOAST NOTIFICATIONS ---
+    window.showToast = function (message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+
+        toast.innerHTML = `
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        toast.addEventListener('click', () => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        });
+
+
+        container.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (toast.isConnected) {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 3000);
+    };
+
+    let activeTeamFilter = null;
+
+    function resetDropdown(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const span = el.querySelector('.selected-option');
+        if (span) {
+            span.textContent = 'Seleccionar equipo';
+            span.style.color = '';
+        }
+    }
+
     // --- DROPDOWNS ---
-    function setupDropdown(elementId, teams, hiddenInputId = null) {
+    function setupDropdown(elementId, teams, hiddenInputId = null, onSelect = null) {
         const selectElement = document.getElementById(elementId);
         if (!selectElement) return;
 
@@ -115,6 +161,7 @@
                     selectedSpan.style.color = '#fff';
                     optionsList.classList.add('hidden');
                     if (hiddenInput) hiddenInput.value = team.name;
+                    if (onSelect) onSelect(team.name);
                 });
                 optionsList.appendChild(div);
             });
@@ -141,16 +188,76 @@
         });
     }
 
-    setupDropdown('primera-select', primeraTeams);
-    setupDropdown('segunda-select', segundaTeams);
+    setupDropdown('primera-select', primeraTeams, null, (teamName) => {
+        resetDropdown('segunda-select');
+        activeTeamFilter = teamName;
+        loadTopics();
+        const ftc = document.getElementById('favorite-team-filter');
+        if (ftc) ftc.classList.remove('active');
+    });
+    setupDropdown('segunda-select', segundaTeams, null, (teamName) => {
+        resetDropdown('primera-select');
+        activeTeamFilter = teamName;
+        loadTopics();
+        const ftc = document.getElementById('favorite-team-filter');
+        if (ftc) ftc.classList.remove('active');
+    });
     setupDropdown('reg-team-select', allTeams, 'reg-team-value');
     setupDropdown('topic-team-select', allTeams, 'topic-team-value');
+
+    const viewAllLink = document.querySelector('.view-all-link');
+    if (viewAllLink) {
+        viewAllLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetDropdown('primera-select');
+            resetDropdown('segunda-select');
+            activeTeamFilter = null;
+            loadTopics();
+            const ftc = document.getElementById('favorite-team-filter');
+            if (ftc) ftc.classList.remove('active');
+        });
+    }
 
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.custom-select')) {
             document.querySelectorAll('.options-list').forEach(list => list.classList.add('hidden'));
         }
     });
+
+    // --- FAVORITE TEAM LOGIC ---
+    function updateFavoriteTeamWidget() {
+        const savedUser = localStorage.getItem('forolaliga_user');
+        const favTeamCard = document.getElementById('favorite-team-filter');
+
+        if (savedUser && favTeamCard) {
+            const user = JSON.parse(savedUser);
+            if (user.favoriteTeam) {
+                const teamData = allTeams.find(t => t.name === user.favoriteTeam);
+                if (teamData) {
+                    favTeamCard.querySelector('.fav-team-logo').src = teamData.logo;
+                    favTeamCard.querySelector('.fav-name').textContent = teamData.name;
+                    favTeamCard.classList.remove('hidden');
+
+                    // Click event to filter
+                    favTeamCard.onclick = () => {
+                        resetDropdown('primera-select');
+                        resetDropdown('segunda-select');
+                        activeTeamFilter = user.favoriteTeam;
+                        loadTopics();
+
+                        // Visual feedback
+                        document.querySelectorAll('.favorite-team-card').forEach(c => c.classList.remove('active'));
+                        favTeamCard.classList.add('active');
+                    };
+                    return;
+                }
+            }
+        }
+        if (favTeamCard) favTeamCard.classList.add('hidden');
+    }
+
+    // Call initially
+    updateFavoriteTeamWidget();
 
     // --- CHAT LOGIC ---
     const chatRoomsPrimera = document.getElementById('chat-rooms-primera');
@@ -161,6 +268,45 @@
     const sendBtn = document.getElementById('send-btn');
     const chatInputContainer = document.getElementById('chat-input-container');
 
+    // Initialize Socket.io
+    const socket = io();
+
+    socket.on('message', (msg) => {
+        // Only append if we are in the correct room or if it's a global notification (optional improvement)
+        if (window.currentRoom === msg.room) {
+            appendMessage(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+
+    function appendMessage(msg) {
+        const checkSystemMsg = chatMessages.querySelector('.system-message');
+        if (checkSystemMsg && checkSystemMsg.textContent.includes('Has entrado a la sala')) {
+            // Keep system message but ensure new messages come after
+        }
+
+        const savedUser = localStorage.getItem('forolaliga_user');
+        const currentUsername = savedUser ? JSON.parse(savedUser).username : null;
+
+        const msgDiv = document.createElement('div');
+        const isSent = msg.username === currentUsername;
+        msgDiv.className = isSent ? 'message message-sent' : 'message message-received';
+
+        const avatarHtml = getAvatarHtml(msg.username, msg.favorite_team, 'avatar-chat');
+
+        msgDiv.innerHTML = `
+            <div class="chat-message-content">
+                ${!isSent ? avatarHtml : ''}
+                <div class="message-bubble">
+                    <span class="message-author">@${msg.username}</span>
+                    <span class="message-text">${renderContentWithGifs(msg.content, 'message-gif')}</span>
+                </div>
+                ${isSent ? avatarHtml : ''}
+            </div>
+        `;
+        chatMessages.appendChild(msgDiv);
+    }
+
     // Mobile rooms toggle
     const roomsToggleBtn = document.getElementById('rooms-toggle-btn');
     const chatSidebar = document.querySelector('.chat-sidebar');
@@ -168,6 +314,31 @@
     if (roomsToggleBtn && chatSidebar) {
         roomsToggleBtn.addEventListener('click', () => {
             chatSidebar.classList.toggle('mobile-open');
+        });
+    }
+
+    // Close button inside sidebar
+    const roomsCloseBtn = document.getElementById('rooms-close-btn');
+    if (roomsCloseBtn && chatSidebar) {
+        roomsCloseBtn.addEventListener('click', () => {
+            chatSidebar.classList.remove('mobile-open');
+        });
+    }
+
+    // Mobile forum filters toggle
+    const filtersToggleBtn = document.getElementById('filters-toggle-btn');
+    const filtersCloseBtn = document.getElementById('filters-close-btn');
+    const filterWidget = document.querySelector('.filter-widget');
+
+    if (filtersToggleBtn && filterWidget) {
+        filtersToggleBtn.addEventListener('click', () => {
+            filterWidget.classList.toggle('mobile-open');
+        });
+    }
+
+    if (filtersCloseBtn && filterWidget) {
+        filtersCloseBtn.addEventListener('click', () => {
+            filterWidget.classList.remove('mobile-open');
         });
     }
 
@@ -252,6 +423,13 @@
         currentRoomNameEl.textContent = roomName;
         window.currentRoom = roomName;
         if (chatInputContainer) chatInputContainer.classList.remove('hidden');
+
+        // Close mobile rooms overlay
+        if (chatSidebar) chatSidebar.classList.remove('mobile-open');
+
+        // Join socket room
+        socket.emit('joinRoom', roomName);
+
         window.loadMessages(roomName);
     }
 
@@ -261,33 +439,21 @@
 
         const savedUser = localStorage.getItem('forolaliga_user');
         if (!savedUser) {
-            alert('Debes iniciar sesión para enviar mensajes');
+            showToast('Debes iniciar sesión para enviar mensajes', 'error');
             return;
         }
 
         const user = JSON.parse(savedUser);
 
-        try {
-            const response = await fetch('/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    room: window.currentRoom,
-                    username: user.username,
-                    content: text
-                })
-            });
+        // Emit message to server via Socket.io
+        socket.emit('chatMessage', {
+            room: window.currentRoom,
+            username: user.username,
+            content: text
+        });
 
-            if (response.ok) {
-                messageInput.value = '';
-                window.loadMessages(window.currentRoom);
-            } else {
-                alert('Error al enviar mensaje');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión con el servidor');
-        }
+        messageInput.value = '';
+        // No need to manually append or reload, the socket event 'message' will handle it for sender too
     }
 
     if (sendBtn) {
@@ -297,23 +463,7 @@
         });
     }
 
-    // --- AUTO-REFRESH MESSAGES ---
-    let lastMessageId = 0;
-    async function refreshMessages() {
-        if (!window.currentRoom) return;
-        try {
-            const response = await fetch(`/api/messages/${encodeURIComponent(window.currentRoom)}`);
-            const messages = await response.json();
-            if (messages.length > 0) {
-                const latestId = Math.max(...messages.map(m => m.id));
-                if (latestId > lastMessageId) {
-                    lastMessageId = latestId;
-                    window.loadMessages(window.currentRoom);
-                }
-            }
-        } catch (error) { }
-    }
-    setInterval(refreshMessages, 3000);
+    // --- AUTO-REFRESH MESSAGES REMOVED (Replaced by Socket.io) ---
 
     // --- MODAL LOGIC ---
     const loginBtn = document.querySelector('.login-btn');
@@ -408,10 +558,11 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Login exitoso: ' + data.user.username);
+                        showToast('Login exitoso: ' + data.user.username, 'success');
                         closeAllModals();
                         localStorage.setItem('forolaliga_user', JSON.stringify(data.user));
                         updateLoginUI(data.user);
+                        updateFavoriteTeamWidget();
                     } else {
                         alert('Error: ' + data.error);
                     }
@@ -432,7 +583,7 @@
                 const favoriteTeam = document.getElementById('reg-team-value').value;
 
                 if (password !== confirmPassword) {
-                    alert('Las contraseñas no coinciden');
+                    showToast('Las contraseñas no coinciden', 'error');
                     return;
                 }
 
@@ -445,15 +596,15 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Registro exitoso! Ahora puedes iniciar sesión.');
+                        showToast('Registro exitoso! Ahora puedes iniciar sesión.', 'success');
                         registerModal.classList.add('hidden');
                         loginModal.classList.remove('hidden');
                     } else {
-                        alert('Error: ' + data.error);
+                        showToast('Error: ' + data.error, 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexión con el servidor');
+                    showToast('Error de conexión con el servidor', 'error');
                 }
             });
         }
@@ -511,12 +662,24 @@
     const newTopicBtn = document.getElementById('new-topic-btn');
     const topicModal = document.getElementById('topic-modal');
     const topicForm = document.getElementById('topic-form');
+    let activeSearchQuery = '';
 
     async function loadTopics() {
         if (!topicsContainer) return;
 
         try {
-            const response = await fetch('/api/topics');
+            let url = '/api/topics';
+            const params = new URLSearchParams();
+            if (activeTeamFilter) params.append('team', activeTeamFilter);
+            if (activeSearchQuery) params.append('search', activeSearchQuery);
+
+            // Should valid category logic also be preserved?
+            // Existing implementation didn't seem to use category filter in loadTopics.
+            // If it did, we should include it. But let's stick to team filter for now.
+
+            if (params.toString()) url += `?${params.toString()}`;
+
+            const response = await fetch(url);
             const topics = await response.json();
 
             if (topics.length === 0) {
@@ -600,7 +763,7 @@
         newTopicBtn.addEventListener('click', () => {
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para crear un tema');
+                showToast('Debes iniciar sesión para crear un tema', 'error');
                 loginModal.classList.remove('hidden');
                 return;
             }
@@ -623,7 +786,7 @@
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para crear un tema');
+                showToast('Debes iniciar sesión para crear un tema', 'error');
                 return;
             }
 
@@ -639,7 +802,7 @@
             }
 
             if (!title || !content || !category) {
-                alert('Por favor completa todos los campos requeridos');
+                showToast('Por favor completa todos los campos requeridos', 'error');
                 return;
             }
 
@@ -653,7 +816,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('¡Tema creado exitosamente!');
+                    showToast('¡Tema creado exitosamente!', 'success');
                     topicModal.classList.add('hidden');
                     topicForm.reset();
                     const teamSpan = document.querySelector('#topic-team-select .selected-option');
@@ -667,11 +830,11 @@
                     if (gifUrlInput) gifUrlInput.value = '';
                     loadTopics();
                 } else {
-                    alert('Error: ' + data.error);
+                    showToast('Error: ' + data.error, 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error de conexión con el servidor');
+                showToast('Error de conexión con el servidor', 'error');
             }
         });
     }
@@ -739,7 +902,7 @@
             topicDetailModal.classList.remove('hidden');
         } catch (error) {
             console.error('Error loading topic:', error);
-            alert('Error al cargar el tema');
+            showToast('Error al cargar el tema', 'error');
         }
     }
 
@@ -781,7 +944,7 @@
 
             const savedUser = localStorage.getItem('forolaliga_user');
             if (!savedUser) {
-                alert('Debes iniciar sesión para responder');
+                showToast('Debes iniciar sesión para responder', 'error');
                 return;
             }
 
@@ -794,7 +957,7 @@
             }
 
             if (!content) {
-                alert('Escribe una respuesta');
+                showToast('Escribe una respuesta', 'error');
                 return;
             }
 
@@ -1026,6 +1189,68 @@
         if (closeBtn) closeBtn.addEventListener('click', closeGifModal);
         gifModal.addEventListener('click', (e) => {
             if (e.target === gifModal) closeGifModal();
+        });
+    }
+
+    // --- EMOJI PICKER ---
+    const emojiBtn = document.getElementById('chat-emoji-btn');
+    const emojiPicker = document.getElementById('emoji-picker');
+    const msgInput = document.getElementById('message-input');
+
+    const commonEmojis = [
+        '😀', '😂', '🤣', '😊', '😍', '😒', '😘', '😁', '😉', '😎',
+        '😢', '😭', '😱', '😡', '😴', '🤔', '👍', '👎', '👏', '🙏',
+        '🔥', '✨', '❤️', '⚽', '🏆', '🎉', '💩', '🤡', '👻', '💀'
+    ];
+
+    if (emojiBtn && emojiPicker) {
+        // Populate picker
+        commonEmojis.forEach(emoji => {
+            const span = document.createElement('span');
+            span.textContent = emoji;
+            span.className = 'emoji-item';
+            span.addEventListener('click', () => {
+                if (msgInput) {
+                    msgInput.value += emoji;
+                    msgInput.focus();
+                }
+            });
+            emojiPicker.appendChild(span);
+        });
+
+        // Toggle picker
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('hidden');
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target)) {
+                emojiPicker.classList.add('hidden');
+            }
+        });
+    }
+
+    // Reload Button Logic
+    const reloadTopicsBtn = document.getElementById('reload-topics-btn');
+    if (reloadTopicsBtn) {
+        reloadTopicsBtn.addEventListener('click', () => {
+            loadTopics();
+            showToast('Temas actualizados', 'success');
+        });
+    }
+
+    // Forum Search Logic
+    const forumSearchInput = document.getElementById('forum-search-input');
+    if (forumSearchInput) {
+        let searchTimeout;
+        forumSearchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                activeSearchQuery = forumSearchInput.value.trim();
+                loadTopics();
+            }, 300);
         });
     }
 });
