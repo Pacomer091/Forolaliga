@@ -76,7 +76,7 @@ app.post('/api/register', (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(password, 8);
 
-    const sql = 'INSERT INTO users (username, password, favorite_team) VALUES (?, ?, ?)';
+    const sql = 'INSERT INTO users (username, password, favorite_team, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)';
     const params = [username, hashedPassword, favoriteTeam || null];
 
     db.run(sql, params, function (err) {
@@ -123,9 +123,56 @@ app.post('/api/login', (req, res) => {
             user: {
                 id: row.id,
                 username: row.username,
-                favoriteTeam: row.favorite_team
+                favoriteTeam: row.favorite_team,
+                created_at: row.created_at,
+                bio: row.bio
             }
         });
+    });
+});
+
+// Get User Profile
+app.get('/api/users/:username', (req, res) => {
+    const username = req.params.username;
+    console.log(`[API] Fetching profile for username: "${username}"`);
+
+    db.get('SELECT username, favorite_team, created_at, bio, banner_url FROM users WHERE username = ? COLLATE NOCASE', [username], (err, row) => {
+        if (err) {
+            console.error(`[API] Database error fetching profile for "${username}":`, err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            console.warn(`[API] User not found: "${username}"`);
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(row);
+    });
+});
+
+// Update User Profile (Bio)
+app.put('/api/users/profile', (req, res) => {
+    const { username, bio, banner_url } = req.body;
+
+    // Simple verification (in a real app, use tokens)
+    if (!username) {
+        return res.status(400).json({ error: 'Username required' });
+    }
+
+    if (bio && bio.length > 50) {
+        return res.status(400).json({ error: 'Bio must be 50 characters or less' });
+    }
+
+    db.run('UPDATE users SET bio = ?, banner_url = ? WHERE username = ? COLLATE NOCASE', [bio, banner_url || null, username], function (err) {
+        if (err) {
+            console.error(`[API] DB Error updating profile for ${username}:`, err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'User not found or no changes made' });
+        }
+
+        res.json({ message: 'Profile updated successfully', bio, banner_url });
     });
 });
 

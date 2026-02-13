@@ -31,8 +31,8 @@ body {
     background-color: var(--bg-body);
     /* Subtle gradient background */
     background-image:
-        radial-gradient(circle at 10% 20%, rgba(58, 134, 255, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(131, 56, 236, 0.15) 0%, transparent 40%);
+        radial-gradient(circle at 10% 20%, color-mix(in srgb, var(--accent-blue), transparent 85%) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, color-mix(in srgb, var(--accent-purple), transparent 85%) 0%, transparent 40%);
     background-attachment: fixed;
     color: var(--text-primary);
     line-height: 1.6;
@@ -111,11 +111,11 @@ body {
     height: 100%;
     /* Seamless looped gradient */
     background: linear-gradient(115deg,
-            rgba(58, 134, 255, 0.1) 0%,
-            rgba(131, 56, 236, 0.4) 25%,
-            rgba(255, 0, 110, 0.4) 50%,
-            rgba(131, 56, 236, 0.4) 75%,
-            rgba(58, 134, 255, 0.1) 100%);
+            color-mix(in srgb, var(--accent-blue), transparent 80%) 0%,
+            color-mix(in srgb, var(--accent-purple), transparent 50%) 25%,
+            color-mix(in srgb, var(--accent-blue), transparent 30%) 50%,
+            color-mix(in srgb, var(--accent-purple), transparent 50%) 75%,
+            color-mix(in srgb, var(--accent-blue), transparent 80%) 100%);
     background-size: 200% 200%;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -145,17 +145,17 @@ body {
 }
 
 .btn-primary {
-    background: rgba(58, 134, 255, 0.2);
-    /* Semi-transparent blue base */
+    background: color-mix(in srgb, var(--accent-blue), transparent 40%);
+    /* More solid base for team colors */
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(58, 134, 255, 0.3);
+    border: 1px solid var(--accent-blue);
     color: white;
-    box-shadow: 0 4px 6px rgba(58, 134, 255, 0.15);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-blue), transparent 70%);
 }
 
 .btn-primary:hover {
     border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 15px rgba(58, 134, 255, 0.4);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--accent-blue), transparent 60%);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     color: #fff;
     transform: translateY(-2px);
@@ -256,6 +256,8 @@ body {
 
 .login-btn {
     padding: 0.5rem 1.5rem;
+    background: color-mix(in srgb, var(--accent-blue), transparent 40%);
+    border: 1px solid var(--accent-blue);
 }
 
 /* Filter Toggle/Close - hidden on desktop */
@@ -314,9 +316,9 @@ body {
 }
 
 .favorite-team-card.active {
-    background: rgba(58, 134, 255, 0.15);
+    background: color-mix(in srgb, var(--accent-blue), transparent 85%);
     border-color: var(--accent-blue);
-    box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.3);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-blue), transparent 70%);
 }
 
 .fav-team-logo {
@@ -410,7 +412,7 @@ body {
 .search-bar input:focus {
     outline: none;
     border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.15);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-blue), transparent 85%);
 }
 
 .icon-btn {
@@ -460,10 +462,10 @@ body {
 }
 
 .user-avatar img {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .user-avatar {
@@ -944,19 +946,62 @@ body {
 }
 
 /* MODAL STYLES */
+/* Profile Modal Team Theming */
+#profile-modal {
+    --profile-accent: var(--accent-blue);
+    --profile-accent-hover: var(--accent-blue-hover);
+}
+
+#profile-modal .modal-content {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5),
+        0 0 15px var(--profile-accent);
+}
+
+#profile-modal .btn-plasma {
+    background: linear-gradient(135deg, var(--profile-accent), var(--profile-accent-hover));
+    box-shadow: 0 4px 15px var(--profile-accent);
+}
+
+#profile-modal .btn-plasma:hover {
+    box-shadow: 0 6px 20px var(--profile-accent);
+}
+
+#profile-modal .profile-banner {
+    border-bottom: 2px solid var(--profile-accent);
+}
+
+#profile-modal .profile-avatar-large {
+    border: 3px solid var(--profile-accent);
+    box-shadow: 0 0 20px var(--profile-accent);
+}
+
+#profile-modal .bio-counter {
+    color: var(--profile-accent);
+}
+
+#profile-modal .form-group label {
+    color: var(--profile-accent);
+}
+
+#profile-modal .current-banner-preview {
+    border: 1px solid var(--profile-accent);
+}
+
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
-    animation: fadeIn 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 
 @keyframes fadeIn {
@@ -1675,39 +1720,50 @@ body {
     /* Forum Layout - Single column */
     .view-layout {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1.5rem;
     }
 
     .sidebar {
-        order: -1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .sidebar .widget {
         display: none;
     }
 
-    .sidebar .widget.mobile-open {
-        display: block;
+    /* centerbar */
+    .sidebar.mobile-open {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 90vw;
+        inset: 0;
+        z-index: 2500;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(15px);
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        animation: fadeInOverlay 0.3s ease-out;
+    }
+
+    .sidebar.mobile-open .widget {
+        display: block !important;
+        width: 100%;
         max-width: 400px;
-        max-height: 70vh;
-        z-index: 200;
-        background-color: var(--bg-card);
-        backdrop-filter: blur(20px);
-        border-radius: 16px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        max-height: 80vh;
         overflow-y: auto;
-        padding: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     }
 
     .btn-filters-toggle {
         display: flex !important;
-        margin-bottom: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
     }
 
     .btn-filters-close {
@@ -1721,12 +1777,45 @@ body {
     /* Chat Layout */
     .chat-layout {
         grid-template-columns: 1fr;
-        height: calc(100vh - 130px);
+        height: calc(100vh - 160px);
         min-height: 0;
     }
 
     .chat-sidebar {
-        max-height: 200px;
+        display: none;
+    }
+
+    .chat-centerbar.mobile-open {
+        position: fixed;
+        inset: 0;
+        z-index: 2500;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(15px);
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        animation: fadeInOverlay 0.3s ease-out;
+    }
+
+    .chat-sidebar.mobile-open .chat-sidebar-header,
+    .chat-sidebar.mobile-open .chat-rooms-list {
+        width: 100%;
+        max-width: 360px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        display: block;
+    }
+
+    .chat-sidebar.mobile-open .chat-sidebar-header {
+        border-radius: 16px 16px 0 0;
+        border-bottom: none;
+    }
+
+    .chat-sidebar.mobile-open .chat-rooms-list {
+        border-radius: 0 0 16px 16px;
+        max-height: 60vh;
         overflow-y: auto;
     }
 
@@ -1755,6 +1844,18 @@ body {
 
     .topic-team-badge {
         display: none;
+    }
+
+    @keyframes fadeInOverlay {
+        from {
+            opacity: 0;
+            backdrop-filter: blur(0);
+        }
+
+        to {
+            opacity: 1;
+            backdrop-filter: blur(15px);
+        }
     }
 
     /* Modals */
@@ -2039,6 +2140,7 @@ body {
 
 .btn-rooms-toggle:hover {
     background-color: var(--accent-blue-hover);
+    color: white;
 }
 
 @media (max-width: 768px) {
@@ -2092,8 +2194,45 @@ body {
     }
 
     .chat-header {
-        position: relative;
-        gap: 1rem;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 1rem !important;
+        position: relative !important;
+        min-height: 60px !important;
+        width: 100% !important;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card) !important;
+        box-sizing: border-box !important;
+    }
+
+    .btn-rooms-toggle {
+        display: flex !important;
+        position: absolute !important;
+        left: 10px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin: 0 !important;
+        z-index: 100 !important;
+    }
+
+    .chat-room-info {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding: 0 60px !important;
+        /* Reserve space for the button */
+        box-sizing: border-box !important;
+    }
+
+    .chat-room-info h3 {
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block !important;
     }
 }
 
@@ -2110,14 +2249,6 @@ body {
 
 .toast {
     background-color: var(--bg-card);
-    color: var(--text-primary);
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border-left: 4px solid var(--accent-blue);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     gap: 10px;
     min-width: 300px;
     animation: slideInToast 0.3s ease-out;
@@ -2214,4 +2345,566 @@ body {
 .emoji-picker::-webkit-scrollbar-thumb {
     background-color: var(--border-color);
     border-radius: 3px;
+}
+
+/* --- GLOBAL MODALS --- */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal.hidden {
+    display: none !important;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.glass-panel {
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Profile Modal Specialized Styles */
+.profile-modal-content {
+    text-align: center;
+}
+
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar-container {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--accent-blue);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-input);
+}
+
+.profile-avatar-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Profile Modal Team-Theming Overrides */
+#profile-modal .profile-avatar-container {
+    border-color: var(--profile-accent);
+    box-shadow: 0 0 20px var(--profile-accent);
+}
+
+#profile-modal .user-avatar {
+    background-color: var(--profile-accent);
+    color: white;
+}
+
+#profile-modal .team-tag {
+    background-color: color-mix(in srgb, var(--profile-accent) 20%, transparent);
+    color: var(--profile-accent);
+    border: 1px solid color-mix(in srgb, var(--profile-accent) 30%, transparent);
+}
+
+#profile-modal .modal-content {
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5),
+        0 0 15px var(--profile-accent);
+}
+
+#profile-modal .profile-body textarea:focus {
+    border-color: var(--profile-accent);
+}
+
+.profile-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.profile-body {
+    text-align: left;
+}
+
+.profile-body textarea {
+    width: 100%;
+    height: 100px;
+    padding: 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    resize: none;
+    font-family: inherit;
+    margin-top: 0.5rem;
+}
+
+.profile-body textarea:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+#save-profile-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+
+/* User Menu in Nav */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-display-name {
+    font-weight: 600;
+    margin-right: 0.5rem;
+    color: var(--text-primary);
+}
+
+/* User Link */
+.user-link {
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.user-link:hover {
+    text-decoration: underline;
+    color: var(--accent-blue);
+}
+
+
+/* Login Overlay Animation */
+#login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.05);
+    /* Very subtle overlay */
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+#login-overlay.hidden {
+    display: none;
+}
+
+#login-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.overlay-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#overlay-team-logo {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+    transition: transform 0.3s;
+}
+
+@keyframes pulse-logo {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes explode-logo {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    40% {
+        transform: scale(1.3);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+}
+
+.animate-pulse {
+    animation: pulse-logo 1.5s ease-in-out infinite;
+}
+
+.animate-explode {
+    animation: explode-logo 0.4s ease-out forwards;
+}
+
+.particle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: var(--particle-color);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 10000;
+}
+
+.animate-particle {
+    animation: particle-burst 0.8s ease-out forwards;
+}
+
+@keyframes particle-burst {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+    }
+}
+
+/* =============================================== */
+/* PLASMA GLASS BUTTON EFFECT */
+/* =============================================== */
+
+.btn-primary {
+    position: relative;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.btn-plasma {
+    background: linear-gradient(135deg,
+            color-mix(in srgb, var(--accent-blue) 20%, transparent),
+            color-mix(in srgb, var(--accent-purple) 20%, transparent));
+    backdrop-filter: blur(10px);
+    border: 2px solid color-mix(in srgb, var(--accent-blue) 30%, transparent);
+    color: #fff;
+    box-shadow:
+        0 8px 32px color-mix(in srgb, var(--accent-blue) 20%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-plasma::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle,
+            color-mix(in srgb, var(--accent-blue) 30%, transparent) 0%,
+            transparent 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: -1;
+}
+
+.btn-plasma::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 2px;
+    background: linear-gradient(135deg,
+            var(--accent-blue),
+            var(--accent-purple),
+            var(--accent-blue));
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: plasma-border 3s linear infinite;
+}
+
+@keyframes plasma-border {
+
+    0%,
+    100% {
+        filter: hue-rotate(0deg);
+    }
+
+    50% {
+        filter: hue-rotate(60deg);
+    }
+}
+
+.btn-plasma:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 12px 40px color-mix(in srgb, var(--accent-blue) 40%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: var(--accent-blue);
+}
+
+.btn-plasma:hover::before {
+    opacity: 1;
+}
+
+.btn-plasma:hover::after {
+    opacity: 1;
+}
+
+.btn-plasma:active {
+    transform: translateY(0);
+    box-shadow:
+        0 4px 20px color-mix(in srgb, var(--accent-blue) 30%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glowing effect */
+.btn-plasma:hover {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Disabled state */
+.btn-plasma:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-plasma:disabled:hover {
+    box-shadow:
+        0 8px 32px color-mix(in srgb, var(--accent-blue) 20%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* =============================================== */
+/* PROFILE BANNER */
+/* =============================================== */
+
+.profile-banner {
+    width: calc(100% + 64px);
+    height: 200px;
+    margin: -32px -32px 20px -32px;
+    border-radius: 16px 16px 0 0;
+    background: linear-gradient(135deg,
+            color-mix(in srgb, var(--accent-blue) 40%, transparent),
+            color-mix(in srgb, var(--accent-purple) 40%, transparent));
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(18, 18, 18, 0.9) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.profile-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.banner-preview {
+    margin-top: 12px;
+    position: relative;
+    max-width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+}
+
+.banner-preview img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+}
+
+.banner-preview.hidden {
+    display: none;
+}
+
+.btn-remove-banner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-banner:hover {
+    background: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+}
+
+/* Hide banner edit section for non-own profiles */
+#banner-edit-section.hidden {
+    display: none;
+}
+
+/* --- FORUM FILTER STATUS INDICATOR --- */
+.filter-status-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    animation: fadeInStatus 0.3s ease-out;
+}
+
+.filter-status-container.hidden {
+    display: none;
+}
+
+.active-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-weight: 600;
+    border: 1px solid color-mix(in srgb, var(--accent-blue) 40%, transparent);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--accent-blue) 20%, transparent);
+}
+
+.active-filter-badge img {
+    height: 22px;
+    width: 22px;
+    object-fit: contain;
+}
+
+.btn-clear-filter {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-clear-filter:hover {
+    color: #fff;
+    background: rgba(242, 133, 133, 0.2);
+    border-color: rgba(242, 133, 133, 0.4);
+}
+
+@keyframes fadeInStatus {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- NAV TEAM LOGO --- */
+.user-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-team-logo {
+    height: 24px;
+    width: 24px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+}
+
+.logged-in {
+    padding: 8px 16px !important;
 }
