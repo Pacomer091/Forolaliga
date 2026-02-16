@@ -1,5 +1,6 @@
 ﻿document.addEventListener('DOMContentLoaded', () => {
     console.log('Foro LaLiga loaded');
+    const socket = typeof io !== 'undefined' ? io() : null;
 
     // --- DATA ---
     const primeraTeams = [
@@ -212,14 +213,13 @@
                 }
             }
 
-            if (callback) callback();
-
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 logoImg.classList.remove('animate-explode');
                 if (overlayContent) {
                     overlayContent.querySelectorAll('.particle').forEach(p => p.remove());
                 }
+                if (callback) callback();
             }, 800);
         }, 2500);
     }
@@ -822,16 +822,23 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Login exitoso: ' + data.user.username);
-                        closeAllModals();
                         localStorage.setItem('forolaliga_user', JSON.stringify(data.user));
-                        updateLoginUI(data.user);
+                        closeAllModals();
+
+                        // Show shield animation then reload
+                        if (data.user.favoriteTeam || data.user.favorite_team) {
+                            playLoginAnimation(data.user.favoriteTeam || data.user.favorite_team, () => {
+                                location.reload();
+                            });
+                        } else {
+                            location.reload();
+                        }
                     } else {
-                        alert('Error: ' + data.error);
+                        showToast('Error: ' + data.error, 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error de conexión con el servidor');
+                    showToast('Error de conexión con el servidor', 'error');
                 }
             });
         }
@@ -859,11 +866,11 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        alert('Registro exitoso! Ahora puedes iniciar sesión.');
+                        showToast('¡Registro exitoso! Ya puedes iniciar sesión.', 'success');
                         registerModal.classList.add('hidden');
                         loginModal.classList.remove('hidden');
                     } else {
-                        alert('Error: ' + data.error);
+                        showToast('Error: ' + data.error, 'error');
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -874,6 +881,37 @@
     }
 
     // --- HELPER FUNCTIONS ---
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = {
+            'success': 'fa-circle-check',
+            'error': 'fa-circle-exclamation',
+            'info': 'fa-circle-info',
+            'warning': 'fa-triangle-exclamation'
+        }[type] || 'fa-circle-info';
+
+        toast.innerHTML = `
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        // Remove after delay
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -1059,9 +1097,17 @@
                 </div>
                 <span class="username">@${escapeHtml(topic.username)}</span>
             </div>
+            <div class="reactions-container" data-type="topic" data-id="${topic.id}">
+                <!-- Reactions injected by JS -->
+            </div>
         `;
 
-        card.addEventListener('click', () => openTopicDetail(topic.id));
+        renderReactions('topic', topic.id, card.querySelector('.reactions-container'));
+
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.reaction-btn')) return; // Don't open detail if clicking emoji
+            openTopicDetail(topic.id);
+        });
         return card;
     }
 
@@ -1192,7 +1238,12 @@
                     <span><i class="fa-regular fa-eye"></i> ${topic.views} visualizaciones</span>
                     <span><i class="fa-regular fa-comment"></i> ${topic.replies} respuestas</span>
                 </div>
+                <div class="reactions-container" data-type="topic" data-id="${topic.id}">
+                    <!-- Topic reactions -->
+                </div>
             `;
+
+            renderReactions('topic', topic.id, topicDetailContent.querySelector('.reactions-container'));
 
             await loadReplies(topicId);
 
@@ -1235,7 +1286,11 @@
                         <span class="reply-time">${getTimeAgo(new Date(reply.created_at))}</span>
                     </div>
                     <div class="reply-content">${renderContentWithGifs(reply.content, 'reply-gif')}</div>
+                    <div class="reactions-container" data-type="reply" data-id="${reply.id}">
+                        <!-- Reactions injected by JS -->
+                    </div>
                 `;
+                renderReactions('reply', reply.id, replyDiv.querySelector('.reactions-container'));
                 repliesContainer.appendChild(replyDiv);
             });
         } catch (error) {
@@ -1515,8 +1570,20 @@
     const profileJoined = document.getElementById('profile-joined');
     const profileAvatarContainer = document.getElementById('profile-avatar-container');
     const profileBio = document.getElementById('profile-bio');
+    const profileBioPreview = document.getElementById('profile-bio-preview');
+    const profileLocation = document.getElementById('profile-location');
+    const profileLocationDisplay = document.getElementById('profile-location-display');
+    const profileEditSide = document.getElementById('profile-edit-side');
+    const previewBadge = document.getElementById('preview-badge');
     const bioChars = document.getElementById('bio-chars');
     const saveProfileBtn = document.getElementById('save-profile-btn');
+    const profileBadges = document.getElementById('profile-badges');
+    const profileSocials = document.getElementById('profile-socials');
+    const profileTwitter = document.getElementById('profile-twitter');
+    const profileInstagram = document.getElementById('profile-instagram');
+    const profileModalContent = profileModal ? profileModal.querySelector('.modal-content') : null;
+    const mobileEditBtn = document.getElementById('mobile-edit-btn');
+    const closeEditMobile = document.getElementById('close-edit-mobile');
 
     let currentProfileUsername = null;
 
@@ -1540,6 +1607,19 @@
             profileJoined.textContent = `Unido: ${joinedDate.toLocaleDateString('es-ES')}`;
 
             profileAvatarContainer.innerHTML = getAvatarHtml(userData.username, userData.favorite_team, 'profile-avatar-large');
+
+            // Display Location & Bio Preview
+            const locationText = userData.location || 'Ubicación no especificada';
+            if (profileLocationDisplay) {
+                profileLocationDisplay.innerHTML = `<i class="fa-solid fa-location-dot"></i><span> ${locationText}</span>`;
+            }
+            if (profileBioPreview) {
+                profileBioPreview.textContent = userData.bio || 'Este usuario no tiene biografía.';
+            }
+
+            // Render Badges & Socials
+            renderBadges(userData);
+            renderSocials(userData);
 
             // Apply Team Theming to the Modal
             if (userData.favorite_team) {
@@ -1579,17 +1659,19 @@
             const savedUser = localStorage.getItem('forolaliga_user');
             const isOwnProfile = savedUser && JSON.parse(savedUser).username.toLowerCase() === username.toLowerCase();
             const bannerEditSection = document.getElementById('banner-edit-section');
+            const locationEditSection = document.getElementById('location-edit-section');
             const profileBannerUrl = document.getElementById('profile-banner-url');
             const bannerPreview = document.getElementById('current-banner-preview');
             const bannerPreviewImg = document.getElementById('banner-preview-img');
 
             if (isOwnProfile) {
+                if (profileModalContent) profileModalContent.classList.remove('view-only');
                 profileBio.value = userData.bio || '';
                 profileBio.disabled = false;
-                saveProfileBtn.classList.remove('hidden');
 
-                // Show banner edit section
-                if (bannerEditSection) bannerEditSection.classList.remove('hidden');
+                // Show Edit Side
+                if (profileEditSide) profileEditSide.classList.remove('hidden');
+                if (previewBadge) previewBadge.classList.remove('hidden');
 
                 // Set banner values
                 if (profileBannerUrl) profileBannerUrl.value = userData.banner_url || '';
@@ -1600,22 +1682,184 @@
                     if (bannerPreview) bannerPreview.classList.add('hidden');
                 }
 
-                updateCharCounter();
-            } else {
-                profileBio.value = userData.bio || 'Este usuario no tiene biografía.';
-                profileBio.disabled = true;
-                saveProfileBtn.classList.add('hidden');
+                // Set location value
+                if (profileLocation) profileLocation.value = userData.location || '';
+                if (profileTwitter) profileTwitter.value = userData.twitter_url || '';
+                if (profileInstagram) profileInstagram.value = userData.instagram_url || '';
 
-                // Hide banner edit section
-                if (bannerEditSection) bannerEditSection.classList.add('hidden');
+                updateCharCounter();
+                if (mobileEditBtn) mobileEditBtn.classList.remove('hidden');
+            } else {
+                // Not own profile: Fill preview correctly but hide edit side
+                if (profileModalContent) profileModalContent.classList.add('view-only');
+                if (profileBioPreview) profileBioPreview.textContent = userData.bio || 'Este usuario no tiene biografía.';
+                if (profileEditSide) profileEditSide.classList.add('hidden');
+                if (previewBadge) previewBadge.classList.add('hidden');
+                if (mobileEditBtn) mobileEditBtn.classList.add('hidden');
             }
+
+            // Ensure mobile overlay is closed when opening any profile
+            if (profileEditSide) profileEditSide.classList.remove('mobile-active');
 
             profileModal.classList.remove('hidden');
         } catch (error) {
-            console.error('Error opening profile:', error);
-            alert('Error de conexión al cargar el perfil');
+            console.error('Error opening profile modal:', error);
         }
     }
+
+    function renderBadges(userData) {
+        if (!profileBadges) return;
+        profileBadges.innerHTML = '';
+
+        const badges = [];
+        const badgeAssetsPath = 'assets/badges/';
+
+        // 1. Bronze (Novato/Welcome)
+        badges.push({
+            id: 'novato',
+            img: 'novato.png',
+            title: 'Bronce: ¡Bienvenido al foro!',
+            class: 'badge-novato'
+        });
+
+        // 2. Silver (Veterano: +30 days)
+        const joinDate = new Date(userData.created_at);
+        const daysSinceJoin = Math.floor((new Date() - joinDate) / (1000 * 60 * 60 * 24));
+        if (daysSinceJoin >= 30) {
+            badges.push({
+                id: 'veterano',
+                img: 'veterano.png',
+                title: 'Plata: Veterano (Más de 30 días)',
+                class: 'badge-veterano'
+            });
+        }
+
+        // 3. Gold (Capitán: +50 messages)
+        if (userData.message_count >= 50) {
+            badges.push({
+                id: 'pichichi',
+                img: 'oro.png',
+                title: `Oro: Capitán (${userData.message_count} mensajes)`,
+                class: 'badge-pichichi'
+            });
+        }
+
+        // 4. Honor (Fiel: Favorite Team selected)
+        if (userData.favorite_team) {
+            badges.push({
+                id: 'gold',
+                img: 'honor.png',
+                title: `Honor: Fiel al ${userData.favorite_team}`,
+                class: 'badge-gold'
+            });
+        }
+
+        // Render awarded badges
+        badges.forEach(badge => {
+            const div = document.createElement('div');
+            div.className = `badge-item ${badge.class}`;
+            div.setAttribute('data-title', badge.title);
+
+            // Interaction: Open Zoom
+            div.addEventListener('click', () => {
+                openBadgeZoom(badge);
+            });
+
+            // Create processed image
+            const img = new Image();
+            img.src = `${badgeAssetsPath}${badge.img}`;
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                // Remove black pixels
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    // If pixel is very dark (black background)
+                    if (r < 30 && g < 30 && b < 30) {
+                        data[i + 3] = 0; // Set alpha to 0 (transparent)
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+                const cleanImg = document.createElement('img');
+                cleanImg.src = canvas.toDataURL();
+                div.appendChild(cleanImg);
+            };
+
+            img.onerror = () => {
+                // Fallback to original if processing fails
+                const fallbackImg = document.createElement('img');
+                fallbackImg.src = `${badgeAssetsPath}${badge.img}`;
+                div.appendChild(fallbackImg);
+            };
+
+            profileBadges.appendChild(div);
+        });
+    }
+
+    function openBadgeZoom(badge) {
+        const overlay = document.getElementById('badge-zoom-overlay');
+        const imgContainer = document.querySelector('.badge-zoom-content');
+        const title = document.getElementById('zoomed-badge-title');
+        const desc = document.getElementById('zoomed-badge-desc');
+
+        if (!overlay || !imgContainer || !title || !desc) return;
+
+        // Clear previous zoomed img
+        const oldImg = document.getElementById('zoomed-badge-img');
+        if (oldImg) oldImg.remove();
+
+        const badgeImageUrl = `assets/badges/${badge.img}`;
+
+        // Process large version too
+        const img = new Image();
+        img.src = badgeImageUrl;
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] < 30 && data[i + 1] < 30 && data[i + 2] < 30) data[i + 3] = 0;
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            const cleanImg = document.createElement('img');
+            cleanImg.id = 'zoomed-badge-img';
+            cleanImg.src = canvas.toDataURL();
+            imgContainer.insertBefore(cleanImg, title);
+        };
+
+        const parts = badge.title.split(': ');
+        title.textContent = parts[0];
+        desc.textContent = parts[1] || '';
+
+        overlay.classList.remove('hidden');
+    }
+
+    // Close Badge Zoom
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('badge-zoom-overlay');
+        if (e.target.id === 'badge-zoom-overlay' || e.target.classList.contains('close-zoom')) {
+            overlay.classList.add('hidden');
+        }
+    });
+
 
     function updateCharCounter() {
         if (bioChars && profileBio) {
@@ -1624,7 +1868,62 @@
     }
 
     if (profileBio) {
-        profileBio.addEventListener('input', updateCharCounter);
+        profileBio.addEventListener('input', () => {
+            updateCharCounter();
+            if (profileBioPreview) {
+                profileBioPreview.textContent = profileBio.value.trim() || 'Tu biografía aparecerá aquí...';
+            }
+        });
+    }
+
+    if (profileLocation) {
+        profileLocation.addEventListener('change', () => {
+            if (profileLocationDisplay) {
+                const loc = profileLocation.value || 'Ubicación no especificada';
+                profileLocationDisplay.innerHTML = `<i class="fa-solid fa-location-dot"></i><span> ${loc}</span>`;
+            }
+        });
+    }
+
+    if (profileTwitter) {
+        profileTwitter.addEventListener('input', () => {
+            renderSocials({
+                twitter_url: profileTwitter.value,
+                instagram_url: profileInstagram.value
+            });
+        });
+    }
+
+    if (profileInstagram) {
+        profileInstagram.addEventListener('input', () => {
+            renderSocials({
+                twitter_url: profileTwitter.value,
+                instagram_url: profileInstagram.value
+            });
+        });
+    }
+
+    function renderSocials(userData) {
+        if (!profileSocials) return;
+        profileSocials.innerHTML = '';
+
+        if (userData.twitter_url && userData.twitter_url.trim() !== '') {
+            const a = document.createElement('a');
+            a.href = userData.twitter_url.startsWith('http') ? userData.twitter_url : `https://${userData.twitter_url}`;
+            a.target = '_blank';
+            a.className = 'social-icon twitter';
+            a.innerHTML = '<i class="fa-brands fa-x-twitter"></i>';
+            profileSocials.appendChild(a);
+        }
+
+        if (userData.instagram_url && userData.instagram_url.trim() !== '') {
+            const a = document.createElement('a');
+            a.href = userData.instagram_url.startsWith('http') ? userData.instagram_url : `https://${userData.instagram_url}`;
+            a.target = '_blank';
+            a.className = 'social-icon instagram';
+            a.innerHTML = '<i class="fa-brands fa-instagram"></i>';
+            profileSocials.appendChild(a);
+        }
     }
 
     if (saveProfileBtn) {
@@ -1637,15 +1936,23 @@
                 }
 
                 const user = JSON.parse(savedUser);
-                const bio = profileBio.value.trim();
-
-                const bannerUrlEl = document.getElementById('profile-banner-url');
-                const bannerUrl = bannerUrlEl ? bannerUrlEl.value : '';
+                const bio = profileBio.value;
+                const banner_url = document.getElementById('profile-banner-url').value;
+                const location = profileLocation.value;
+                const twitter_url = profileTwitter.value;
+                const instagram_url = profileInstagram.value;
 
                 const response = await fetch('/api/users/profile', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user.username, bio, banner_url: bannerUrl })
+                    body: JSON.stringify({
+                        username: user.username,
+                        bio,
+                        banner_url,
+                        location,
+                        twitter_url,
+                        instagram_url
+                    })
                 });
 
                 if (response.ok) {
@@ -1696,10 +2003,29 @@
     if (profileModal) {
         const closeBtn = profileModal.querySelector('.close-modal');
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => profileModal.classList.add('hidden'));
+            closeBtn.addEventListener('click', () => {
+                profileModal.classList.add('hidden');
+                if (profileEditSide) profileEditSide.classList.remove('mobile-active');
+            });
         }
         profileModal.addEventListener('click', (e) => {
-            if (e.target === profileModal) profileModal.classList.add('hidden');
+            if (e.target === profileModal) {
+                profileModal.classList.add('hidden');
+                if (profileEditSide) profileEditSide.classList.remove('mobile-active');
+            }
+        });
+    }
+
+    // Toggle Mobile Edit Overlay
+    if (mobileEditBtn) {
+        mobileEditBtn.addEventListener('click', () => {
+            if (profileEditSide) profileEditSide.classList.add('mobile-active');
+        });
+    }
+
+    if (closeEditMobile) {
+        closeEditMobile.addEventListener('click', () => {
+            if (profileEditSide) profileEditSide.classList.remove('mobile-active');
         });
     }
 
@@ -1744,4 +2070,81 @@
 
     // Load topics on page load
     loadTopics();
+
+    // --- REACTIONS LOGIC ---
+    async function renderReactions(targetType, targetId, container) {
+        if (!container) return;
+
+        const savedUser = localStorage.getItem('forolaliga_user');
+        const currentUser = savedUser ? JSON.parse(savedUser).username : null;
+
+        try {
+            const url = `/api/reactions/${targetType}/${targetId}${currentUser ? `?username=${currentUser}` : ''}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const emojis = ['👍', '🔥', '⚽', '👏', '📉'];
+            const countsMap = {};
+            data.counts.forEach(c => countsMap[c.emoji] = c.count);
+
+            container.innerHTML = '';
+            emojis.forEach(emoji => {
+                const count = countsMap[emoji] || 0;
+                const isActive = data.userReactions && data.userReactions.includes(emoji);
+
+                const btn = document.createElement('button');
+                btn.className = `reaction-btn ${isActive ? 'active' : ''}`;
+                btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
+                btn.title = `Reaccionar con ${emoji}`;
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleReaction(targetType, targetId, emoji);
+                });
+
+                container.appendChild(btn);
+            });
+        } catch (error) {
+            console.error('Error rendering reactions:', error);
+        }
+    }
+
+    async function toggleReaction(targetType, targetId, emoji) {
+        const savedUser = localStorage.getItem('forolaliga_user');
+        if (!savedUser) {
+            showToast('Inicia sesión para reaccionar', 'error');
+            if (loginModal) loginModal.classList.remove('hidden');
+            return;
+        }
+
+        const username = JSON.parse(savedUser).username;
+
+        try {
+            const response = await fetch('/api/reactions/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetType, targetId, username, emoji })
+            });
+
+            if (response.ok) {
+                // Update local UI immediately
+                const containers = document.querySelectorAll(`.reactions-container[data-type="${targetType}"][data-id="${targetId}"]`);
+                containers.forEach(container => {
+                    renderReactions(targetType, targetId, container);
+                });
+            }
+        } catch (error) {
+            console.error('Error toggling reaction:', error);
+        }
+    }
+
+    // Real-time synchronization for reactions
+    if (typeof io !== 'undefined') {
+        socket.on('reactionUpdated', (data) => {
+            const containers = document.querySelectorAll(`.reactions-container[data-type="${data.targetType}"][data-id="${data.targetId}"]`);
+            containers.forEach(container => {
+                renderReactions(data.targetType, data.targetId, container);
+            });
+        });
+    }
 });

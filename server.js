@@ -125,7 +125,8 @@ app.post('/api/login', (req, res) => {
                 username: row.username,
                 favoriteTeam: row.favorite_team,
                 created_at: row.created_at,
-                bio: row.bio
+                bio: row.bio,
+                location: row.location
             }
         });
     });
@@ -136,22 +137,38 @@ app.get('/api/users/:username', (req, res) => {
     const username = req.params.username;
     console.log(`[API] Fetching profile for username: "${username}"`);
 
-    db.get('SELECT username, favorite_team, created_at, bio, banner_url FROM users WHERE username = ? COLLATE NOCASE', [username], (err, row) => {
+    db.get('SELECT username, favorite_team, created_at, bio, banner_url, location, twitter_url, instagram_url FROM users WHERE username = ? COLLATE NOCASE', [username], (err, userRow) => {
         if (err) {
             console.error(`[API] Database error fetching profile for "${username}":`, err.message);
             return res.status(500).json({ error: err.message });
         }
-        if (!row) {
-            console.warn(`[API] User not found: "${username}"`);
-            return res.status(404).json({ error: 'User not found' });
+        if (!userRow) {
+            console.warn(`[API] Profile not found for username: "${username}"`);
+            return res.status(404).json({ error: 'Usuario no encontrado' });
         }
-        res.json(row);
+
+        // Get message counts
+        db.get('SELECT COUNT(*) as topicsCount FROM topics WHERE username = ? COLLATE NOCASE', [username], (err, topicRow) => {
+            db.get('SELECT COUNT(*) as repliesCount FROM replies WHERE username = ? COLLATE NOCASE', [username], (err, replyRow) => {
+                res.json({
+                    username: userRow.username,
+                    favorite_team: userRow.favorite_team,
+                    created_at: userRow.created_at,
+                    bio: userRow.bio,
+                    banner_url: userRow.banner_url,
+                    location: userRow.location,
+                    twitter_url: userRow.twitter_url,
+                    instagram_url: userRow.instagram_url,
+                    message_count: (topicRow ? topicRow.topicsCount : 0) + (replyRow ? replyRow.repliesCount : 0)
+                });
+            });
+        });
     });
 });
 
 // Update User Profile (Bio)
 app.put('/api/users/profile', (req, res) => {
-    const { username, bio, banner_url } = req.body;
+    const { username, bio, banner_url, location, twitter_url, instagram_url } = req.body;
 
     // Simple verification (in a real app, use tokens)
     if (!username) {
@@ -162,7 +179,7 @@ app.put('/api/users/profile', (req, res) => {
         return res.status(400).json({ error: 'Bio must be 50 characters or less' });
     }
 
-    db.run('UPDATE users SET bio = ?, banner_url = ? WHERE username = ? COLLATE NOCASE', [bio, banner_url || null, username], function (err) {
+    db.run('UPDATE users SET bio = ?, banner_url = ?, location = ?, twitter_url = ?, instagram_url = ? WHERE username = ? COLLATE NOCASE', [bio, banner_url || null, location || null, twitter_url || null, instagram_url || null, username], function (err) {
         if (err) {
             console.error(`[API] DB Error updating profile for ${username}:`, err.message);
             return res.status(500).json({ error: err.message });
@@ -172,7 +189,14 @@ app.put('/api/users/profile', (req, res) => {
             return res.status(404).json({ error: 'User not found or no changes made' });
         }
 
-        res.json({ message: 'Profile updated successfully', bio, banner_url });
+        res.json({
+            message: 'Profile updated successfully',
+            bio,
+            banner_url,
+            location,
+            twitter_url,
+            instagram_url
+        });
     });
 });
 
@@ -383,6 +407,69 @@ app.post('/api/replies', (req, res) => {
     });
 });
 
+// --- REACTIONS API ---
+app.post('/api/reactions/toggle', (req, res) => {
+    const { targetType, targetId, username, emoji } = req.body;
+
+    if (!targetType || !targetId || !username || !emoji) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if it already exists
+    db.get('SELECT id FROM reactions WHERE target_type = ? AND target_id = ? AND username = ? COLLATE NOCASE AND emoji = ?',
+        [targetType, targetId, username, emoji], (err, row) => {
+            if (err) {
+                console.error('[API] Error checking reaction:', err.message);
+                return res.status(500).json({ error: err.message });
+            }
+
+            if (row) {
+                // Remove it
+                db.run('DELETE FROM reactions WHERE id = ?', [row.id], (err) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    io.emit('reactionUpdated', { targetType, targetId }); // Notify all to refresh
+                    res.json({ status: 'removed' });
+                });
+            } else {
+                // Add it
+                db.run('INSERT INTO reactions (target_type, target_id, username, emoji) VALUES (?, ?, ?, ?)',
+                    [targetType, targetId, username, emoji], function (err) {
+                        if (err) {
+                            if (err.message.includes('UNIQUE constraint failed')) {
+                                return res.json({ status: 'already_exists' });
+                            }
+                            console.error('[API] Error inserting reaction:', err.message);
+                            return res.status(500).json({ error: err.message });
+                        }
+                        io.emit('reactionUpdated', { targetType, targetId }); // Notify all to refresh
+                        res.json({ status: 'added' });
+                    });
+            }
+        });
+});
+
+app.get('/api/reactions/:type/:id', (req, res) => {
+    const { type, id } = req.params;
+    const currentUser = req.query.username;
+
+    const sql = 'SELECT emoji, COUNT(*) as count FROM reactions WHERE target_type = ? AND target_id = ? GROUP BY emoji';
+
+    db.all(sql, [type, id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        if (currentUser) {
+            db.all('SELECT emoji FROM reactions WHERE target_type = ? AND target_id = ? AND username = ? COLLATE NOCASE',
+                [type, id, currentUser], (err, userReactions) => {
+                    const reactedEmojis = (userReactions || []).map(r => r.emoji);
+                    res.json({ counts: rows, userReactions: reactedEmojis });
+                });
+        } else {
+            res.json({ counts: rows });
+        }
+    });
+});
+
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
